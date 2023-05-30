@@ -1,6 +1,7 @@
 # A model based on BERT for assigning VAD scores to sentences.
 
 ### *Editing...
+I am currently developing this model for my graduation thesis, and I intend to continue with whole-body research as part of my future master's program.
 
 ### DataSet
 Emo Bank
