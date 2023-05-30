@@ -1,5 +1,4 @@
-# Assinging VAD scores BERT
-## A model based on BERT for assigning VAD scores to sentences.
+# A model based on BERT for assigning VAD scores to sentences.
 
 ### *Editing...
 
