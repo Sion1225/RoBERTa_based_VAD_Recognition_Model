@@ -118,15 +118,16 @@ y_train_V = y_train_V.reset_index(drop=True)
 y_test_V = y_test_V.reset_index(drop=True)
 
 # Train the XGBoost model with the best hyperparameters
-# Best Hyper-parameter: target=-0.04449, colsample_bytree=0.9, learning_rate=0.2, max_depth=6.535, n_estimators=258.2, subsample=0.9, reg_alpha=0
-XGB_model_DA_V = xgb.XGBRegressor(colsample_bytree=0.9, learning_rate=0.2, max_depth=6, n_estimators=258, subsample=0.9, reg_alpha=0)
+# Best Hyper-parameter: target=-0.0924, colsample_bytree=0.4471, learning_rate=0.08324, max_depth=10.1, n_estimators=348.6, subsample=0.8342, reg_alpha=0
+XGB_model_DA_V = xgb.XGBRegressor(colsample_bytree=0.4, learning_rate=0.08324, max_depth=10, n_estimators=348, subsample=0.8342, reg_alpha=0)
 XGB_model_DA_V.fit(X_train_DA, y_train_V)
+
 # Predict
 y_predict_V = XGB_model_DA_V.predict(X_test_DA)
 
 # Verify
 print("Predict A from V and D")
-Verify(y_test_V, y_predict_V) # MSE: 0.1056
+Verify(y_test_V, y_predict_V) # MSE: 0.1060
 
 # ==============================================================================
 # Predict "the square of V's deviation" from D and A
@@ -148,7 +149,7 @@ X_train_DA, X_test_DA, y_train_V_dev2, y_test_V_dev2 = train_test_split(X_Data, 
 best_params = XGB_evaluate(X_train_DA, y_train_V_dev2)()
 
 # Train the final XGBoost model with the best hyperparameters
-# Best Hyper-parameter: 
+# Best Hyper-parameter: target=-0.03849, colsample_bytree=0.7876, learning_rate=0.0729, max_depth=8.951, n_estimators=275.7, subsample=0.8959, reg_alpha=0
 XGB_model = xgb.XGBRegressor(
     max_depth=int(best_params['max_depth']),
     learning_rate=best_params['learning_rate'],
@@ -165,4 +166,4 @@ y_predict_V_dev2 = XGB_model.predict(X_test_DA)
 
 # Verify
 print(f"Predict the square of V's deviation from D and A")
-Verify(y_test_V_dev2, y_predict_V_dev2) #0.0475
+Verify(y_test_V_dev2, y_predict_V_dev2) #0.0473
