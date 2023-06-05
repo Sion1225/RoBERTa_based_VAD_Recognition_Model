@@ -136,7 +136,7 @@ X_Data = X_Data.transpose()
 V_mean = np.mean(V)
 Y_Data = (V - V_mean)**2 # the square of V's deviation
 
-# Scaler to 1.2~4.6
+# Scale to 1.2~4.6
 scaler = MinMaxScaler(feature_range=(1.2, 4.6))
 Y_Data = scaler.fit_transform([[value] for value in Y_Data])
 Y_Data = np.array(list(chain.from_iterable(Y_Data)))
