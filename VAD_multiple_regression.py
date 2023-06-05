@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
+from itertools import chain
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import MinMaxScaler
 
 import xgboost as xgb
 from bayes_opt import BayesianOptimization
@@ -17,9 +19,9 @@ V, A, D = df["V"], df["A"], df["D"]
 class XGB_evaluate: 
     # Define the parameter bounds for Bayesian Optimization
     param_bounds = {
-        'max_depth': (2, 13),
+        'max_depth': (2, 9),
         'learning_rate': (0.01, 0.2),
-        'n_estimators': (100, 350),
+        'n_estimators': (100, 300),
         'subsample': (0.4, 0.9),
         'colsample_bytree': (0.4, 0.9),
     }
@@ -53,7 +55,7 @@ class XGB_evaluate:
 
 def Verify(y_test_D, y_predict_D):
     for i in range(495, 505):
-        print("{:5} | {:5}".format(y_test_D[i] , y_predict_D[i]))
+        print("{:5.3f} | {:5.3f}".format(round(y_test_D[i], 4), round(y_predict_D[i], 4)))
 
     mse = mean_squared_error(y_test_D, y_predict_D)
     print("MSE: ", mse)
@@ -115,11 +117,39 @@ X_train_DA, X_test_DA, y_train_V, y_test_V = train_test_split(X_Data, Y_Data, te
 y_train_V = y_train_V.reset_index(drop=True)
 y_test_V = y_test_V.reset_index(drop=True)
 
+# Train the XGBoost model with the best hyperparameters
+# Best Hyper-parameter: target=-0.0924, colsample_bytree=0.4471, learning_rate=0.08324, max_depth=10.1, n_estimators=348.6, subsample=0.8342, reg_alpha=0
+XGB_model_DA_V = xgb.XGBRegressor(colsample_bytree=0.4, learning_rate=0.08324, max_depth=10, n_estimators=348, subsample=0.8342, reg_alpha=0)
+XGB_model_DA_V.fit(X_train_DA, y_train_V)
+
+# Predict
+y_predict_V = XGB_model_DA_V.predict(X_test_DA)
+
+# Verify
+print("Predict A from V and D")
+Verify(y_test_V, y_predict_V) # MSE: 0.1060
+
+# ==============================================================================
+# Predict "the square of V's deviation" from D and A
+X_Data = np.vstack((D, A))
+X_Data = X_Data.transpose()
+
+V_mean = np.mean(V)
+Y_Data = (V - V_mean)**2 # the square of V's deviation
+
+# Scale to 1.2~4.6
+scaler = MinMaxScaler(feature_range=(1.2, 4.6))
+Y_Data = scaler.fit_transform([[value] for value in Y_Data])
+Y_Data = np.array(list(chain.from_iterable(Y_Data)))
+
+# Split data for Train and Test
+X_train_DA, X_test_DA, y_train_V_dev2, y_test_V_dev2 = train_test_split(X_Data, Y_Data, test_size=0.1, random_state=11)
+
 # Get the best hyperparameters
-best_params = XGB_evaluate(X_train_DA, y_train_V)()
+best_params = XGB_evaluate(X_train_DA, y_train_V_dev2)()
 
 # Train the final XGBoost model with the best hyperparameters
-# Best Hyper-parameter: target=-0.0924, colsample_bytree=0.4471, learning_rate=0.08324, max_depth=10.1, n_estimators=348.6, subsample=0.8342, reg_alpha=0
+# Best Hyper-parameter: target=-0.03849, colsample_bytree=0.7876, learning_rate=0.0729, max_depth=8.951, n_estimators=275.7, subsample=0.8959, reg_alpha=0
 XGB_model = xgb.XGBRegressor(
     max_depth=int(best_params['max_depth']),
     learning_rate=best_params['learning_rate'],
@@ -129,11 +159,11 @@ XGB_model = xgb.XGBRegressor(
     tree_method="gpu_hist",
     gpu_id=0
 )
-XGB_model.fit(X_train_DA, y_train_V)
+XGB_model.fit(X_train_DA, y_train_V_dev2)
 
 # Predict
-y_predict_V = XGB_model.predict(X_test_DA)
+y_predict_V_dev2 = XGB_model.predict(X_test_DA)
 
 # Verify
-print("Predict V from A and D")
-Verify(y_test_V, y_predict_V) # MSE: 0.1056
+print(f"Predict the square of V's deviation from D and A")
+Verify(y_test_V_dev2, y_predict_V_dev2) #0.0473
