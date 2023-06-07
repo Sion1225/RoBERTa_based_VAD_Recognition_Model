@@ -28,8 +28,8 @@ def convert_datas_to_features(inputs, max_seq_len, tokenizer):
         assert len(input_id) == max_seq_len, "Error with input length {} vs {}".format(len(input_id), max_seq_len)
         assert len(attention_mask) == max_seq_len, "Error with attention mask length {} vs {}".format(len(attention_mask), max_seq_len)
 
-    input_ids.append(input_id)
-    attention_masks.append(attention_mask)
+        input_ids.append(input_id)
+        attention_masks.append(attention_mask)
 
     input_ids = np.array(input_ids, dtype=int)
     attention_masks = np.array(attention_masks, dtype=int)
@@ -46,21 +46,21 @@ RoBERTa_hyper = H_parameter(max_seq_len=512)
 
 # Read and Split data
 df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv")
-print(df.isnull().sum())
-
-#df = df.dropna()
+#print(df.isnull().sum())
 VAD = df[["V","A","D"]]
 V, A, D = df["V"], df["A"], df["D"]
 texts = df["text"]
 
 # Encode Datas
-X_datas = convert_datas_to_features(texts, max_seq_len=RoBERTa_hyper.max_seq_len, tokenizer=tokenizer)
+input_ids, input_masks = convert_datas_to_features(texts, max_seq_len=RoBERTa_hyper.max_seq_len, tokenizer=tokenizer)
 y_datas = np.array(VAD)
 
-print(len(y_datas))
-
 # Split Datas for Train and Test
-X_train, X_test, y_train, y_test = train_test_split(X_datas, y_datas, test_size=0.1, random_state=1225) 
+X_id_train, X_id_test, X_mask_train, X_mask_test, y_train, y_test = train_test_split(input_ids, input_masks, y_datas, test_size=0.1, random_state=1225)
+
+# Assemble ids and masks
+X_train = (X_id_train, X_mask_train)
+X_test = (X_id_test, X_mask_test)
 
 print(X_train[0][0])
 print(X_train[1][0])
