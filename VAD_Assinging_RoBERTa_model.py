@@ -62,8 +62,17 @@ X_id_train, X_id_test, X_mask_train, X_mask_test, y_train, y_test = train_test_s
 X_train = (X_id_train, X_mask_train)
 X_test = (X_id_test, X_mask_test)
 
-print(X_train[0][0])
-print(X_train[1][0])
-print(len(X_train[0][0]))
-print(tokenizer.decode(X_train[0][0]))
-print(y_train[0])
+# load pre-trained model and fine-tuning
+class TF_RoBERTa_VAD_Classification(tf.keras.Model):
+    def __init__(self, model_name):
+        super(TF_RoBERTa_VAD_Classification, self).__init__()
+        self.roberta = TFRobertaModel.from_pretrained(model_name, from_pt=True)
+        self.predict_V_1 = tf.kreas.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1")
+        self.predict_A_1 = tf.kreas.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
+        self.predict_D_1 = tf.kreas.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
+    
+    def call(self, inputs):
+        input_ids, attention_mask = inputs
+        outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
+        cls_token = outputs[1]
+
