@@ -66,22 +66,34 @@ X_test = (X_id_test, X_mask_test)
 class TF_RoBERTa_VAD_Classification(tf.keras.Model):
     def __init__(self, model_name):
         super(TF_RoBERTa_VAD_Classification, self).__init__()
+
         self.roberta = TFRobertaModel.from_pretrained(model_name, from_pt=True)
+
         self.predict_V_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1")
         self.predict_A_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
         self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
+
         self.corr_layer_1 = tf.keras.layers.Dense(64, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="gelu")
         self.drop_layer_1 = tf.keras.layers.Dropout(0.8)
         self.corr_layer_2 = tf.keras.layers.Dense(3, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="gelu")
+
         self.predict_V_2 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1")
         self.predict_A_2 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
         self.predict_D_2 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
     
     def call(self, inputs):
         input_ids, attention_mask = inputs
+
         outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
         cls_token = outputs[1]
-        V_1 = self.predict_A_1(cls_token)
+
+        V_1 = self.predict_V_1(cls_token)
         A_1 = self.predict_A_1(cls_token)
         D_1 = self.predict_D_1(cls_token)
+
+        Output_of_corr_layer = self.corr_layer_1(V_1, A_1, D_1)
+        Output_of_corr_layer = self.drop_layer_1(Output_of_corr_layer)
+        Output_of_corr_layer = self.corr_layer_2(Output_of_corr_layer)
+        
+
 
