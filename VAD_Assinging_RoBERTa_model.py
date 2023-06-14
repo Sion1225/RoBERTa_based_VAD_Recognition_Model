@@ -72,7 +72,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.predict_V_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1")
         self.predict_A_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
         self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
-
+        # Learn Correlation Layers
         self.corr_layer_1 = tf.keras.layers.Dense(64, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="gelu")
         self.drop_layer_1 = tf.keras.layers.Dropout(0.8)
         self.corr_layer_2 = tf.keras.layers.Dense(3, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="gelu")
