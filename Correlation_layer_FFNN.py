@@ -31,12 +31,12 @@ def FFNN_VAD_model(units, kernel_l2_lambda, activity_l2_lambda, dropout_late):
 class Correlation_Layer:
     # Define the parameter bounds for Bayesian Optimization
     param_bounds = { # <<<<<<<<<
-        "units": (32, 512),
-        "kernel_l2_lambda": (0.001, 0.05),
-        "activity_l2_lambda": (0.001, 0.05),
-        "dropout_late": (0, 0.5),
+        "units": (128, 512),
+        "kernel_l2_lambda": (0.0005, 0.01),
+        "activity_l2_lambda": (0.0005, 0.01),
+        "dropout_late": (0, 0.3),
         "batch_size": (8, 128),
-        "epochs": (3, 11)
+        "epochs": (4, 13)
     }
     
     def __init__(self, X_data, y_data, X_test, y_test):
