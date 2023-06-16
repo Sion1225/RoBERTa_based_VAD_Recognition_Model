@@ -4,28 +4,12 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error
 from bayes_opt import BayesianOptimization
 from sklearn.model_selection import train_test_split
+from FFNN_VAD_model import FFNN_VAD_model
 
 # Read DataSet
 df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv")
 # Extract VAD from dataset
 VAD = df[["V","A","D"]]
-
-
-# Build model
-def FFNN_VAD_model(units, kernel_l2_lambda, activity_l2_lambda, dropout_late):
-    inputs = tf.keras.layers.Input(shape=(3,))
-    hidden = tf.keras.layers.Dense(
-        units=units,
-        kernel_regularizer=tf.keras.regularizers.L2(kernel_l2_lambda), 
-        activity_regularizer=tf.keras.regularizers.L2(activity_l2_lambda),
-        activation="gelu"
-    )(inputs)
-    hidden = tf.keras.layers.Dropout(dropout_late)(hidden)
-    outputs = tf.keras.layers.Dense(3,activation="gelu")(hidden)
-    model = tf.keras.Model(inputs=inputs, outputs=outputs)
-
-    return model
-
 
 # Define the objective function for Bayesian Optimization
 class Correlation_Layer:
@@ -101,4 +85,3 @@ print(f"Best Hyper-parameter: {best_H_params}")
 # ver.1: MSE: 0.00044273559175212867, 'activity_l2_lambda': 0.023043456153875184, 'batch_size': 18, 'epochs': 11, 'kernel_l2_lambda': 0.001, 'units': 452
 # ver.2; Added Dropout: MSE: 5.154155498358941e-05, 'activity_l2_lambda': 0.001, 'batch_size': 14, 'dropout_late': 0, 'epochs': 11, 'kernel_l2_lambda': 0.001, 'units': 335
 # ver.3; Added Dropout: MSE: 3.318632144118595e-05, 'activity_l2_lambda': 0.0029252438038930863, 'batch_size': 33, 'dropout_late': 0, 'epochs': 12, 'kernel_l2_lambda': 0.0005, 'units': 342
-# Seems like going worng way. need to make better test data.

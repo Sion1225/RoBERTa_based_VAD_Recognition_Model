@@ -5,6 +5,8 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from transformers import RobertaTokenizer, TFRobertaModel
 
+#from FFNN_VAD_model import FFNN_VAD_model
+
 # Load RoBERTa's Tokenizer
 tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
 
@@ -72,14 +74,10 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.predict_V_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1")
         self.predict_A_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
         self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
-        # Learn Correlation Layers
-        self.corr_layer_1 = tf.keras.layers.Dense(64, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="gelu")
-        self.drop_layer_1 = tf.keras.layers.Dropout(0.8)
-        self.corr_layer_2 = tf.keras.layers.Dense(3, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="gelu")
 
-        self.predict_V_2 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1")
-        self.predict_A_2 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
-        self.predict_D_2 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
+        # Learn Correlation Layers
+        self.Corr_layer = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\FFNN_VAD_Model_ver3")
+
     
     def call(self, inputs):
         input_ids, attention_mask = inputs
@@ -87,13 +85,11 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
         cls_token = outputs[1]
 
-        V_1 = self.predict_V_1(cls_token)
-        A_1 = self.predict_A_1(cls_token)
-        D_1 = self.predict_D_1(cls_token)
+        self.V_1 = self.predict_V_1(cls_token)
+        self.A_1 = self.predict_A_1(cls_token)
+        self.D_1 = self.predict_D_1(cls_token)
 
-        Output_of_corr_layer = self.corr_layer_1(V_1, A_1, D_1)
-        Output_of_corr_layer = self.drop_layer_1(Output_of_corr_layer)
-        Output_of_corr_layer = self.corr_layer_2(Output_of_corr_layer)
-        
+        VAD_1 = tf.concat([self.V_1, self.A_1, self.D_1], 1) # 0: up-down 1: side
+        final_outputs = self.Corr_layer(VAD_1)
 
-
+        return final_outputs
