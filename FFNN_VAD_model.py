@@ -1,3 +1,5 @@
+# Part of Define and Build FFNN_VAD_Model
+
 import tensorflow as tf
 
 # Build model
