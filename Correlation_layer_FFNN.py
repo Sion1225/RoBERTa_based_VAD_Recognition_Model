@@ -18,11 +18,11 @@ class Correlation_Layer:
     # Define the parameter bounds for Bayesian Optimization
     param_bounds = { # <<<<<<<<<
         "units": (128, 512),
-        "kernel_l2_lambda": (0.0005, 0.01),
-        "activity_l2_lambda": (0.0005, 0.01),
+        "kernel_l2_lambda": (0.0001, 0.005),
+        "activity_l2_lambda": (0.0001, 0.005),
         "dropout_late": (0, 0.3),
-        "batch_size": (8, 128),
-        "epochs": (4, 13)
+        "batch_size": (8, 200),
+        "epochs": (6, 15)
     }
     
     def __init__(self, X_data, y_data, X_test, y_test):
@@ -48,7 +48,7 @@ class Correlation_Layer:
     # Run Bayesian Optimization
     def __call__(self):
         xgb_bo = BayesianOptimization(self.fitNevaluate, self.param_bounds)
-        xgb_bo.maximize(init_points=60, n_iter=240) #Bayesian Optimization's Hyper parameters <<<<<<<
+        xgb_bo.maximize(init_points=65, n_iter=260) #Bayesian Optimization's Hyper parameters <<<<<<<
         
         return xgb_bo.max['params']
     
@@ -79,8 +79,13 @@ model.fit(X_train, y_train, batch_size = int(best_H_params["batch_size"]), epoch
 pred = model.predict(X_test)
 
 # Evaluate
+out_of_range_count = tf.reduce_sum(tf.cast((pred > 5) | (pred < 0), tf.int32))
+print(y_test[:25])
+print(pred[:25])
+
 model_MSE = mean_squared_error(y_test, pred)
-print(model_MSE)
+print(f"MSE: {model_MSE}")
+print(f"Count of out of range (0<= pred <=5): {out_of_range_count}")
 print(f"Best Hyper-parameter: {best_H_params}")
 
 # Best Hyper parameters
@@ -88,4 +93,7 @@ print(f"Best Hyper-parameter: {best_H_params}")
 # ver.1: MSE: 5.154155498358941e-05, 'activity_l2_lambda': 0.001, 'batch_size': 14, 'dropout_late': 0, 'epochs': 11, 'kernel_l2_lambda': 0.001, 'units': 335
 # ver.2: MSE: 3.318632144118595e-05, 'activity_l2_lambda': 0.0029252438038930863, 'batch_size': 33, 'dropout_late': 0, 'epochs': 12, 'kernel_l2_lambda': 0.0005, 'units': 342
 
-# he_normal & output layer: linear
+# He_normal & output layer: linear
+# ver.3: MSE: 0.00013909743179621112, 'activity_l2_lambda': 0.0005, 'batch_size': 109, 'dropout_late': 0, 'epochs': 9, 'kernel_l2_lambda': 0.0005, 'units': 385
+# ver.4: MSE: 0.00048316358499479045, 'activity_l2_lambda': 0.0006709484309491943, 'batch_size': 18, 'dropout_late': 0.014174288321380634, 'epochs': 12, 'kernel_l2_lambda': 0.0002161249853798384, 'units': 429
+# ver.5: MSE: 0.00010226922018003949, 'activity_l2_lambda': 0.002229853672868904, 'batch_size': 43, 'dropout_late': 0.13422752486715445, 'epochs': 14, 'kernel_l2_lambda': 0.0015969551956577952, 'units': 475
