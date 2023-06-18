@@ -84,6 +84,8 @@ print(model_MSE)
 print(f"Best Hyper-parameter: {best_H_params}")
 
 # Best Hyper parameters
-# ver.1: MSE: 0.00044273559175212867, 'activity_l2_lambda': 0.023043456153875184, 'batch_size': 18, 'epochs': 11, 'kernel_l2_lambda': 0.001, 'units': 452
-# ver.2; Added Dropout: MSE: 5.154155498358941e-05, 'activity_l2_lambda': 0.001, 'batch_size': 14, 'dropout_late': 0, 'epochs': 11, 'kernel_l2_lambda': 0.001, 'units': 335
-# ver.3; Added Dropout: MSE: 3.318632144118595e-05, 'activity_l2_lambda': 0.0029252438038930863, 'batch_size': 33, 'dropout_late': 0, 'epochs': 12, 'kernel_l2_lambda': 0.0005, 'units': 342
+# Xavier & output layer: gelu ; Wrong setting
+# ver.1: MSE: 5.154155498358941e-05, 'activity_l2_lambda': 0.001, 'batch_size': 14, 'dropout_late': 0, 'epochs': 11, 'kernel_l2_lambda': 0.001, 'units': 335
+# ver.2: MSE: 3.318632144118595e-05, 'activity_l2_lambda': 0.0029252438038930863, 'batch_size': 33, 'dropout_late': 0, 'epochs': 12, 'kernel_l2_lambda': 0.0005, 'units': 342
+
+# he_normal & output layer: linear

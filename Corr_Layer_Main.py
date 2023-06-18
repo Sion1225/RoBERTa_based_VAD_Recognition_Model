@@ -1,10 +1,5 @@
 # Part of pre-train with best hyper-parameters FFNN_VAD_Model
 
-# Best Hyper parameters
-# ver.1: MSE: 0.00044273559175212867, 'activity_l2_lambda': 0.023043456153875184, 'batch_size': 18, 'epochs': 11, 'kernel_l2_lambda': 0.001, 'units': 452
-# ver.2; Added Dropout: MSE: 5.154155498358941e-05, 'activity_l2_lambda': 0.001, 'batch_size': 14, 'dropout_late': 0, 'epochs': 11, 'kernel_l2_lambda': 0.001, 'units': 335 || Test MSE: 0.00009378134
-# ver.3; Added Dropout: MSE: 3.318632144118595e-05, 'activity_l2_lambda': 0.0029252438038930863, 'batch_size': 33, 'dropout_late': 0, 'epochs': 12, 'kernel_l2_lambda': 0.0005, 'units': 342 || Test MSE: 0.000065812168
-
 import tensorflow as tf
 import numpy as np
 import pandas as pd
