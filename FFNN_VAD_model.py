@@ -10,7 +10,7 @@ def FFNN_VAD_model(units, kernel_l2_lambda, activity_l2_lambda, dropout_late):
         kernel_regularizer=tf.keras.regularizers.L2(kernel_l2_lambda), 
         activity_regularizer=tf.keras.regularizers.L2(activity_l2_lambda),
         activation="gelu",
-        kernel_initializer = "he_normal"
+        kernel_initializer = "he_uniform" #he_normal or he_uniform
     )(inputs)
     hidden = tf.keras.layers.Dropout(dropout_late)(hidden)
     outputs = tf.keras.layers.Dense(3,activation="linear")(hidden)
