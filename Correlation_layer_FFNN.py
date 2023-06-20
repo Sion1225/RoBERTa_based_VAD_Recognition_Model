@@ -100,3 +100,4 @@ print(f"Best Hyper-parameter: {best_H_params}")
 
 # He_uniform & output layer: linear
 # ver.6: MSE: 0.004850356600907168, 'activity_l2_lambda': 0.0023742977480897165, 'batch_size': 8, 'dropout_late': 0.10319616603117594, 'epochs': 8, 'kernel_l2_lambda': 0.0007538979997234782, 'units': 208
+# ver.7: MSE: 4.063779009953945e-05, 'activity_l2_lambda': 0.0001, 'batch_size': 88, 'dropout_late': 0, 'epochs': 15, 'kernel_l2_lambda': 0.0001, 'units': 466

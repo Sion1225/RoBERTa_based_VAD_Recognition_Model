@@ -57,8 +57,10 @@ Corr_model.save("Assinging_VAD_scores_BERT\Model\FFNN_VAD_Model_ver3_" + datetim
 pred = Corr_model.predict(X_test)
 
 # Evaluate
+out_of_range_count = tf.reduce_sum(tf.cast((pred > 5) | (pred < 0), tf.int32))
 print(y_test[:25])
 print(pred[:25])
 
 model_MSE = mean_squared_error(y_test, pred)
-print(model_MSE)
+print(f"MSE: {model_MSE}")
+print(f"Count of out of range (0<= pred <=5): {out_of_range_count}")
