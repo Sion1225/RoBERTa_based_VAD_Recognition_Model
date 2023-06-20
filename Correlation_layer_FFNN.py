@@ -89,15 +89,12 @@ print(f"Count of out of range (0<= pred <=5): {out_of_range_count}")
 print(f"Best Hyper-parameter: {best_H_params}")
 
 # Best Hyper parameters
-# Xavier & output layer: gelu ; Wrong setting
-# ver.1: MSE: 5.154155498358941e-05, 'activity_l2_lambda': 0.001, 'batch_size': 14, 'dropout_late': 0, 'epochs': 11, 'kernel_l2_lambda': 0.001, 'units': 335
-# ver.2: MSE: 3.318632144118595e-05, 'activity_l2_lambda': 0.0029252438038930863, 'batch_size': 33, 'dropout_late': 0, 'epochs': 12, 'kernel_l2_lambda': 0.0005, 'units': 342
 
 # He_normal & output layer: linear
-# ver.3: MSE: 0.00013909743179621112, 'activity_l2_lambda': 0.0005, 'batch_size': 109, 'dropout_late': 0, 'epochs': 9, 'kernel_l2_lambda': 0.0005, 'units': 385
-# ver.4: MSE: 0.00048316358499479045, 'activity_l2_lambda': 0.0006709484309491943, 'batch_size': 18, 'dropout_late': 0.014174288321380634, 'epochs': 12, 'kernel_l2_lambda': 0.0002161249853798384, 'units': 429
-# ver.5: MSE: 0.00010226922018003949, 'activity_l2_lambda': 0.002229853672868904, 'batch_size': 43, 'dropout_late': 0.13422752486715445, 'epochs': 14, 'kernel_l2_lambda': 0.0015969551956577952, 'units': 475
+# ver.1: MSE: 0.00013909743179621112, 'activity_l2_lambda': 0.0005, 'batch_size': 109, 'dropout_late': 0, 'epochs': 9, 'kernel_l2_lambda': 0.0005, 'units': 385
+# ver.2: MSE: 0.00048316358499479045, 'activity_l2_lambda': 0.0006709484309491943, 'batch_size': 18, 'dropout_late': 0.014174288321380634, 'epochs': 12, 'kernel_l2_lambda': 0.0002161249853798384, 'units': 429
+# ver.3: MSE: 0.00010226922018003949, 'activity_l2_lambda': 0.002229853672868904, 'batch_size': 43, 'dropout_late': 0.13422752486715445, 'epochs': 14, 'kernel_l2_lambda': 0.0015969551956577952, 'units': 475
 
 # He_uniform & output layer: linear
-# ver.6: MSE: 0.004850356600907168, 'activity_l2_lambda': 0.0023742977480897165, 'batch_size': 8, 'dropout_late': 0.10319616603117594, 'epochs': 8, 'kernel_l2_lambda': 0.0007538979997234782, 'units': 208
-# ver.7: MSE: 4.063779009953945e-05, 'activity_l2_lambda': 0.0001, 'batch_size': 88, 'dropout_late': 0, 'epochs': 15, 'kernel_l2_lambda': 0.0001, 'units': 466
+# ver.4: MSE: 0.004850356600907168, 'activity_l2_lambda': 0.0023742977480897165, 'batch_size': 8, 'dropout_late': 0.10319616603117594, 'epochs': 8, 'kernel_l2_lambda': 0.0007538979997234782, 'units': 208
+# ver.5: MSE: 4.063779009953945e-05, 'activity_l2_lambda': 0.0001, 'batch_size': 88, 'dropout_late': 0, 'epochs': 15, 'kernel_l2_lambda': 0.0001, 'units': 466
