@@ -17,12 +17,12 @@ VAD = df[["V","A","D"]]
 class Correlation_Layer:
     # Define the parameter bounds for Bayesian Optimization
     param_bounds = { # <<<<<<<<<
-        "units": (128, 512),
+        "units": (150, 600),
         "kernel_l2_lambda": (0.0001, 0.005),
         "activity_l2_lambda": (0.0001, 0.005),
-        "dropout_late": (0, 0.3),
+        "dropout_late": (0.05, 0.3),
         "batch_size": (8, 200),
-        "epochs": (6, 15)
+        "epochs": (7, 16)
     }
     
     def __init__(self, X_data, y_data, X_test, y_test):
@@ -89,12 +89,13 @@ print(f"Count of out of range (0<= pred <=5): {out_of_range_count}")
 print(f"Best Hyper-parameter: {best_H_params}")
 
 # Best Hyper parameters
-
+# 실험을 통해서 drop out 이 0이된 하이퍼파라미터값은 버림. (과적합 & 치팅위험)
 # He_normal & output layer: linear
-# ver.1: MSE: 0.00013909743179621112, 'activity_l2_lambda': 0.0005, 'batch_size': 109, 'dropout_late': 0, 'epochs': 9, 'kernel_l2_lambda': 0.0005, 'units': 385
-# ver.2: MSE: 0.00048316358499479045, 'activity_l2_lambda': 0.0006709484309491943, 'batch_size': 18, 'dropout_late': 0.014174288321380634, 'epochs': 12, 'kernel_l2_lambda': 0.0002161249853798384, 'units': 429
-# ver.3: MSE: 0.00010226922018003949, 'activity_l2_lambda': 0.002229853672868904, 'batch_size': 43, 'dropout_late': 0.13422752486715445, 'epochs': 14, 'kernel_l2_lambda': 0.0015969551956577952, 'units': 475
+# ver.1: MSE: 0.00048316358499479045, 'activity_l2_lambda': 0.0006709484309491943, 'batch_size': 18, 'dropout_late': 0.014174288321380634, 'epochs': 12, 'kernel_l2_lambda': 0.0002161249853798384, 'units': 429
+# ver.2: MSE: 0.00010226922018003949, 'activity_l2_lambda': 0.002229853672868904, 'batch_size': 43, 'dropout_late': 0.13422752486715445, 'epochs': 14, 'kernel_l2_lambda': 0.0015969551956577952, 'units': 475
+# ver.3: MSE: 0.00048299373531979147, 'activity_l2_lambda': 0.0027801164716184518, 'batch_size': 12, 'dropout_late': 0.263572048877131, 'epochs': 13, 'kernel_l2_lambda': 0.0009195709533158637, 'units': 237
 
 # He_uniform & output layer: linear
 # ver.4: MSE: 0.004850356600907168, 'activity_l2_lambda': 0.0023742977480897165, 'batch_size': 8, 'dropout_late': 0.10319616603117594, 'epochs': 8, 'kernel_l2_lambda': 0.0007538979997234782, 'units': 208
-# ver.5: MSE: 4.063779009953945e-05, 'activity_l2_lambda': 0.0001, 'batch_size': 88, 'dropout_late': 0, 'epochs': 15, 'kernel_l2_lambda': 0.0001, 'units': 466
+# ver.5: MSE: 0.0022572217535319883, 'activity_l2_lambda': 0.0011767368355160217, 'batch_size': 21, 'dropout_late': 0.24560460384301647, 'epochs': 13, 'kernel_l2_lambda': 0.00037475804946315855, 'units': 477
+# ver.6: MSE: 0.0005390459871742311, 'activity_l2_lambda': 0.0008971675445227548, 'batch_size': 30, 'dropout_late': 0.055347911812369935, 'epochs': 15, 'kernel_l2_lambda': 0.0005002548666769983, 'units': 546
