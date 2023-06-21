@@ -1,6 +1,7 @@
 """
 Linear schedule with warmup.
 This is implementation of the Learning scheduler of the RoBERTa paper for tensorflow.
+RoBERTa: A Robustly Optimized BERT Pretraining Approach (Yinhan Liu, Myle Ott et al., 2019)
 """
 
 import tensorflow as tf
