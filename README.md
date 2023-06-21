@@ -2,6 +2,7 @@
 
 ### *Editing...
 I am currently developing this model for my graduation thesis, and I intend to continue this research as part of my future master's program and research.
+This will be updated after I finish to write paper.
 
 ### DataSet
 Emo Bank
