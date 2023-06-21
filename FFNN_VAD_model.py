@@ -1,9 +1,9 @@
-# Part of Define and Build FFNN_VAD_Model
+"""Part of Define and Build FFNN_VAD_Model."""
 
 import tensorflow as tf
 
 # Build model
-def FFNN_VAD_model(units, kernel_l2_lambda, activity_l2_lambda, dropout_late):
+def FFNN_VAD_model(units: int, kernel_l2_lambda: float, activity_l2_lambda: float, dropout_late: float) -> tf.keras.Model :
     inputs = tf.keras.layers.Input(shape=(3,))
     hidden = tf.keras.layers.Dense(
         units=units,

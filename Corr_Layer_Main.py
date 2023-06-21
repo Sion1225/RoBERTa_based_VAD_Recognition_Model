@@ -1,4 +1,4 @@
-# Part of pre-train with best hyper-parameters FFNN_VAD_Model
+"""Part of pre-train with best hyper-parameters FFNN_VAD_Model."""
 
 import tensorflow as tf
 import numpy as np
