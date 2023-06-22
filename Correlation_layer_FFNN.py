@@ -16,14 +16,14 @@ VAD = df[["V","A","D"]]
 # Define the objective function for Bayesian Optimization
 class Correlation_Layer:
     # Define the parameter bounds for Bayesian Optimization
-    param_bounds = { # <<<<<<<<<
+    param_bounds = { # --------- Parameters Bounds----------
         "units": (150, 600),
         "kernel_l2_lambda": (0.0001, 0.005),
         "activity_l2_lambda": (0.0001, 0.005),
         "dropout_late": (0.05, 0.3),
         "batch_size": (8, 200),
         "epochs": (7, 16)
-    }
+    } # ----------------------------------------------------
     
     def __init__(self, X_data, y_data, X_test, y_test):
         self.X_data = X_data
@@ -89,7 +89,7 @@ print(f"Count of out of range (0<= pred <=5): {out_of_range_count}")
 print(f"Best Hyper-parameter: {best_H_params}")
 
 # Best Hyper parameters
-# 실험을 통해서 drop out 이 0이된 하이퍼파라미터값은 버림. (과적합 & 치팅위험)
+# Hyperparameter values with a dropout of 0 are discarded through experiments (overfitting & cheating risk)
 # He_normal & output layer: linear
 # ver.1: MSE: 0.00048316358499479045, 'activity_l2_lambda': 0.0006709484309491943, 'batch_size': 18, 'dropout_late': 0.014174288321380634, 'epochs': 12, 'kernel_l2_lambda': 0.0002161249853798384, 'units': 429
 # ver.2: MSE: 0.00010226922018003949, 'activity_l2_lambda': 0.002229853672868904, 'batch_size': 43, 'dropout_late': 0.13422752486715445, 'epochs': 14, 'kernel_l2_lambda': 0.0015969551956577952, 'units': 475
