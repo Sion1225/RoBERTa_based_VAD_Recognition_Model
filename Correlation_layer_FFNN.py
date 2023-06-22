@@ -20,7 +20,7 @@ class Correlation_Layer:
         "units": (150, 600),
         "kernel_l2_lambda": (0.0001, 0.005),
         "activity_l2_lambda": (0.0001, 0.005),
-        "dropout_late": (0.05, 0.3),
+        "dropout_rate": (0.05, 0.3),
         "batch_size": (8, 200),
         "epochs": (7, 16)
     } # ----------------------------------------------------
@@ -31,9 +31,9 @@ class Correlation_Layer:
         self.X_test = X_test
         self.y_test = y_test
         
-    def fitNevaluate(self, units, kernel_l2_lambda, activity_l2_lambda, dropout_late, batch_size, epochs):
+    def fitNevaluate(self, units, kernel_l2_lambda, activity_l2_lambda, dropout_rate, batch_size, epochs):
         # Load model
-        model = FFNN_VAD_model(int(units), kernel_l2_lambda, activity_l2_lambda, dropout_late)
+        model = FFNN_VAD_model(int(units), kernel_l2_lambda, activity_l2_lambda, dropout_rate)
         # Model Compile
         model.compile(optimizer="Adam", loss="mse", metrics=["mse"])
         # Fit model
@@ -69,7 +69,7 @@ model = FFNN_VAD_model(
     units=int(best_H_params["units"]), 
     kernel_l2_lambda=best_H_params["kernel_l2_lambda"], 
     activity_l2_lambda=best_H_params["activity_l2_lambda"], 
-    dropout_late=best_H_params["dropout_late"]
+    dropout_rate=best_H_params["dropout_rate"]
     )
 model.compile(optimizer="Adam", loss="mse", metrics=["mse"])
 
@@ -91,11 +91,11 @@ print(f"Best Hyper-parameter: {best_H_params}")
 # Best Hyper parameters
 # Hyperparameter values with a dropout of 0 are discarded through experiments (overfitting & cheating risk)
 # He_normal & output layer: linear
-# ver.1: MSE: 0.00048316358499479045, 'activity_l2_lambda': 0.0006709484309491943, 'batch_size': 18, 'dropout_late': 0.014174288321380634, 'epochs': 12, 'kernel_l2_lambda': 0.0002161249853798384, 'units': 429
-# ver.2: MSE: 0.00010226922018003949, 'activity_l2_lambda': 0.002229853672868904, 'batch_size': 43, 'dropout_late': 0.13422752486715445, 'epochs': 14, 'kernel_l2_lambda': 0.0015969551956577952, 'units': 475
-# ver.3: MSE: 0.00048299373531979147, 'activity_l2_lambda': 0.0027801164716184518, 'batch_size': 12, 'dropout_late': 0.263572048877131, 'epochs': 13, 'kernel_l2_lambda': 0.0009195709533158637, 'units': 237
+# ver.1: MSE: 0.00048316358499479045, 'activity_l2_lambda': 0.0006709484309491943, 'batch_size': 18, 'dropout_rate': 0.014174288321380634, 'epochs': 12, 'kernel_l2_lambda': 0.0002161249853798384, 'units': 429
+# ver.2: MSE: 0.00010226922018003949, 'activity_l2_lambda': 0.002229853672868904, 'batch_size': 43, 'dropout_rate': 0.13422752486715445, 'epochs': 14, 'kernel_l2_lambda': 0.0015969551956577952, 'units': 475
+# ver.3: MSE: 0.00048299373531979147, 'activity_l2_lambda': 0.0027801164716184518, 'batch_size': 12, 'dropout_rate': 0.263572048877131, 'epochs': 13, 'kernel_l2_lambda': 0.0009195709533158637, 'units': 237
 
 # He_uniform & output layer: linear
-# ver.4: MSE: 0.004850356600907168, 'activity_l2_lambda': 0.0023742977480897165, 'batch_size': 8, 'dropout_late': 0.10319616603117594, 'epochs': 8, 'kernel_l2_lambda': 0.0007538979997234782, 'units': 208
-# ver.5: MSE: 0.0022572217535319883, 'activity_l2_lambda': 0.0011767368355160217, 'batch_size': 21, 'dropout_late': 0.24560460384301647, 'epochs': 13, 'kernel_l2_lambda': 0.00037475804946315855, 'units': 477
-# ver.6: MSE: 0.0005390459871742311, 'activity_l2_lambda': 0.0008971675445227548, 'batch_size': 30, 'dropout_late': 0.055347911812369935, 'epochs': 15, 'kernel_l2_lambda': 0.0005002548666769983, 'units': 546
+# ver.4: MSE: 0.004850356600907168, 'activity_l2_lambda': 0.0023742977480897165, 'batch_size': 8, 'dropout_rate': 0.10319616603117594, 'epochs': 8, 'kernel_l2_lambda': 0.0007538979997234782, 'units': 208
+# ver.5: MSE: 0.0022572217535319883, 'activity_l2_lambda': 0.0011767368355160217, 'batch_size': 21, 'dropout_rate': 0.24560460384301647, 'epochs': 13, 'kernel_l2_lambda': 0.00037475804946315855, 'units': 477
+# ver.6: MSE: 0.0005390459871742311, 'activity_l2_lambda': 0.0008971675445227548, 'batch_size': 30, 'dropout_rate': 0.055347911812369935, 'epochs': 15, 'kernel_l2_lambda': 0.0005002548666769983, 'units': 546

@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 # Build model
-def FFNN_VAD_model(units: int, kernel_l2_lambda: float, activity_l2_lambda: float, dropout_late: float) -> tf.keras.Model :
+def FFNN_VAD_model(units: int, kernel_l2_lambda: float, activity_l2_lambda: float, dropout_rate: float) -> tf.keras.Model :
     inputs = tf.keras.layers.Input(shape=(3,))
     hidden = tf.keras.layers.Dense(
         units=units,
@@ -12,7 +12,7 @@ def FFNN_VAD_model(units: int, kernel_l2_lambda: float, activity_l2_lambda: floa
         activation="gelu",
         kernel_initializer = "he_uniform" #he_normal or he_uniform
     )(inputs)
-    hidden = tf.keras.layers.Dropout(dropout_late)(hidden)
+    hidden = tf.keras.layers.Dropout(dropout_rate)(hidden)
     outputs = tf.keras.layers.Dense(3,activation="linear")(hidden)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
 

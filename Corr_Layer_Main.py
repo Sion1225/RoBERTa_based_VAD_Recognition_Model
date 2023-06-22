@@ -32,12 +32,12 @@ y_test = X_test
 #print(f"Input and Label's sample: {X_train[3]}")
 
 # Set Hyper-parameter
-# ver.6: MSE: 0.0005390459871742311, 'activity_l2_lambda': 0.0008971675445227548, 'batch_size': 30, 'dropout_late': 0.055347911812369935, 'epochs': 15, 'kernel_l2_lambda': 0.0005002548666769983, 'units': 546
+# ver.6: MSE: 0.0005390459871742311, 'activity_l2_lambda': 0.0008971675445227548, 'batch_size': 30, 'dropout_rate': 0.055347911812369935, 'epochs': 15, 'kernel_l2_lambda': 0.0005002548666769983, 'units': 546
 Corr_model = FFNN_VAD_model( # ----- Edit -----
     units=546,
     kernel_l2_lambda=0.0005002548666769983,
     activity_l2_lambda=0.0008971675445227548,
-    dropout_late=0.055347911812369935
+    dropout_rate=0.055347911812369935
 ) #--------------------------------------------
 Corr_model.compile(optimizer="Adam", loss="mse", metrics=["mse"])
 

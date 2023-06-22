@@ -119,7 +119,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
 
 # Set Callback function
 dir_name = "Assinging_VAD_scores_BERT\Learning_log"
-file_name = "VAD_Assinging_RoBERTa_model_ver1" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+file_name = "VAD_Assinging_RoBERTa_model_ver1_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
