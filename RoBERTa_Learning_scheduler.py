@@ -22,6 +22,6 @@ class Linear_schedule_with_warmup(tf.keras.optimizers.schedules.LearningRateSche
     def get_config(self) -> dict:
         return {
             "max_lr": self.max_lr,
-            "num_warmup_steps": self.num_warmup_steps,
-            "num_training_steps": self.num_training_steps
+            "num_warmup": self.num_warmup_steps,
+            "num_training": self.num_training_steps
             }
