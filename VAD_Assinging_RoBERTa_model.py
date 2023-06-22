@@ -132,8 +132,8 @@ TensorB = tf.keras.callbacks.TensorBoard(log_dir=TB_log_dir)
 # load defined model and compile
 model = TF_RoBERTa_VAD_Classification("roberta-base")
 lr_schedule = Linear_schedule_with_warmup(max_lr=6e-4, num_warmup=15, num_traning=(len(X_train[0])/model_H_param.num_batch_size)) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
-optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule, beta_1=0.9, beta_2=0.999, epsilon=1e-8, weight_decay=0.01) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
-loss = tf.keras.losses.MSE()
+optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=lr_schedule, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.01) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
+loss = tf.keras.losses.MeanSquaredError()
 model.compile(optimizer=optimizer, loss=loss, metrics = ['accuracy'])
 model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB])
 
