@@ -15,10 +15,9 @@ class Linear_schedule_with_warmup(tf.keras.optimizers.schedules.LearningRateSche
     def __call__(self, step_now) -> float:
         return tf.cond(
             step_now < self.num_warmup,
-            lambda: (tf.cast(step_now, tf.float32) / tf.cast(tf.maximum(1, self.num_warmup), tf.float32)) * self.max_lr,
-            lambda: tf.maximum(0.0, self.max_lr * ((tf.cast(self.num_training, tf.float32) - tf.cast(step_now, tf.float32)) / tf.cast(tf.maximum(1, self.num_training - self.num_warmup), tf.float32)))
+            lambda: (tf.cast(step_now, tf.float32) / tf.cast(tf.maximum(1.0, tf.cast(self.num_warmup, tf.float32)), tf.float32)) * self.max_lr,
+            lambda: tf.maximum(0.0, self.max_lr * ((tf.cast(self.num_training, tf.float32) - tf.cast(step_now, tf.float32)) / tf.cast(tf.maximum(1.0, tf.cast(self.num_training - self.num_warmup, tf.float32)), tf.float32)))
             )
-        
     
     def get_config(self) -> dict:
         return {
