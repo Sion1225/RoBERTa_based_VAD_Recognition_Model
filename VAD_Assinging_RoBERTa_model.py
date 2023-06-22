@@ -68,7 +68,7 @@ class H_parameter:
 model_H_param = H_parameter(num_epochs=4, num_batch_size=32) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
 
 # Read and Split data
-df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv")
+df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv", keep_default_na=False)
 #print(df.isnull().sum())
 VAD = df[["V","A","D"]]
 V, A, D = df["V"], df["A"], df["D"]
