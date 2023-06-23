@@ -1,5 +1,8 @@
 """Encode datas"""
 
+import numpy as np
+from tqdm import tqdm
+
 def convert_datas_to_features(inputs: list, max_seq_len: int, tokenizer):
     
     input_ids, attention_masks, = [], []
