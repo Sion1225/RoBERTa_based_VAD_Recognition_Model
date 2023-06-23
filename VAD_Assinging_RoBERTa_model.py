@@ -21,6 +21,7 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from transformers import RobertaTokenizer, TFRobertaModel
 import os
+from math import ceil
 from datetime import datetime
 
 from RoBERTa_Learning_scheduler import Linear_schedule_with_warmup
@@ -131,12 +132,14 @@ TensorB = tf.keras.callbacks.TensorBoard(log_dir=TB_log_dir)
 
 # load defined model and compile
 model = TF_RoBERTa_VAD_Classification("roberta-base")
-lr_schedule = Linear_schedule_with_warmup(max_lr=6e-4, num_warmup=15, num_traning=(len(X_train[0])/model_H_param.num_batch_size)) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
+num_training = ceil((len(X_train[0])/model_H_param.num_batch_size))
+warmup_ratio = 4.8 # <<< Hyper-parameter; RoBERTa's: 4.8
+lr_schedule = Linear_schedule_with_warmup(max_lr=6e-4, num_warmup=round(num_training*warmup_ratio), num_traning=num_training) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
 optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=lr_schedule, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.01) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
 loss = tf.keras.losses.MeanSquaredError()
 model.compile(optimizer=optimizer, loss=loss, metrics = ['accuracy'])
 model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB])
 
 # Save Model
-model_path = os.path.join(os.curdir, "Model", file_name)
+model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model", file_name)
 model.save(model_path)
