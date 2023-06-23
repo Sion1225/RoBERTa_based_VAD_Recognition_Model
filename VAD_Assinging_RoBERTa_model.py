@@ -138,4 +138,5 @@ model.compile(optimizer=optimizer, loss=loss, metrics = ['accuracy'])
 model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB])
 
 # Save Model
-model.save(r"Assinging_VAD_scores_BERT\\Model\\" + file_name)
+model_path = os.path.join(os.curdir, "Model", file_name)
+model.save(model_path)
