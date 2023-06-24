@@ -92,8 +92,12 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
     
 
 # Load trained model
-custom_objects = {'TF_RoBERTa_VAD_Classification': TF_RoBERTa_VAD_Classification}
-model = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\VAD_Assinging_RoBERTa_model_ver1.1_20230623-074029", custom_objects=custom_objects)
+custom_objects = {"TF_RoBERTa_VAD_Classification": TF_RoBERTa_VAD_Classification}
+#model = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\VAD_Assinging_RoBERTa_model_ver1.1_20230623-074029", custom_objects=custom_objects)
+model = TFRobertaModel.from_pretrained("Assinging_VAD_scores_BERT\Model\VAD_Assinging_RoBERTa_model_ver1.1_20230623-074029")
 
 # Test Model
-for i, 
+for id, mask in X_test[:10]:
+    print(f"Sentence: {tokenizer.decode(id)}")
+    pred = model.predict((id, mask))[0][0]
+    print(f"Predicted Value: {pred}")
