@@ -65,6 +65,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
     def __init__(self, model_name):
         super(TF_RoBERTa_VAD_Classification, self).__init__()
 
+        self.model_name = model_name
         self.roberta = TFRobertaModel.from_pretrained(model_name, from_pt=True)
 
         self.predict_V_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1") # Initializer function test
@@ -89,6 +90,18 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         final_outputs = self.Corr_layer(VAD_1)
 
         return final_outputs
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "model_name": self.model_name,
+            "Corr_layer": self.Corr_layer
+        })
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
     
 
 # Set Callback function
