@@ -95,7 +95,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         config = super().get_config()
         config.update({
             "model_name": self.model_name,
-            "Corr_layer": self.Corr_layer
+            "Corr_layer_config": self.Corr_layer.get_config()
         })
         return config
 

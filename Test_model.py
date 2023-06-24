@@ -26,7 +26,7 @@ from datetime import datetime
 
 from Encode_datas import convert_datas_to_features
 from RoBERTa_Learning_scheduler import Linear_schedule_with_warmup
-#from FFNN_VAD_model import FFNN_VAD_model
+from FFNN_VAD_model import FFNN_VAD_model
 
 # Load RoBERTa's Tokenizer
 tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
@@ -65,6 +65,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
     def __init__(self, model_name):
         super(TF_RoBERTa_VAD_Classification, self).__init__()
 
+        self.model_name = model_name
         self.roberta = TFRobertaModel.from_pretrained(model_name, from_pt=True)
 
         self.predict_V_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1") # Initializer function test
@@ -89,12 +90,25 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         final_outputs = self.Corr_layer(VAD_1)
 
         return final_outputs
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "model_name": self.model_name,
+            "Corr_layer": self.Corr_layer
+        })
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
     
 
 # Load trained model
-custom_objects = {"TF_RoBERTa_VAD_Classification": TF_RoBERTa_VAD_Classification}
-#model = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\VAD_Assinging_RoBERTa_model_ver1.1_20230623-074029", custom_objects=custom_objects)
-model = TFRobertaModel.from_pretrained("Assinging_VAD_scores_BERT\Model\VAD_Assinging_RoBERTa_model_ver1.1_20230623-074029")
+custom_objects = {"model_name": TF_RoBERTa_VAD_Classification("roberta-base"),
+                  "Corr_layer": FFNN_VAD_model}
+model = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\VAD_Assinging_RoBERTa_model_ver1.2_20230624-200838", custom_objects=custom_objects)
+
 
 # Test Model
 for id, mask in X_test[:10]:
