@@ -95,6 +95,18 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         config = super().get_config()
         config.update({
             "model_name": self.model_name,
+            "Corr_layer_config": self.Corr_layer.get_config()
+        })
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "model_name": self.model_name,
             "Corr_layer": self.Corr_layer
         })
         return config
@@ -105,13 +117,16 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
     
 
 # Load trained model
-custom_objects = {"model_name": TF_RoBERTa_VAD_Classification("roberta-base"),
-                  "Corr_layer": FFNN_VAD_model}
+custom_objects = {"model_name": TF_RoBERTa_VAD_Classification,
+                  "FFNN_VAD_model": FFNN_VAD_model}
 model = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\VAD_Assinging_RoBERTa_model_ver1.2_20230624-200838", custom_objects=custom_objects)
 
 
 # Test Model
-for id, mask in X_test[:10]:
+for i, id, mask in enumerate(X_test):
+    if i >= 10:
+        break
+    
     print(f"Sentence: {tokenizer.decode(id)}")
     pred = model.predict((id, mask))[0][0]
     print(f"Predicted Value: {pred}")
