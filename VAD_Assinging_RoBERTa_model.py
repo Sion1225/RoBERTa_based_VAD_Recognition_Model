@@ -73,7 +73,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
 
         # Learn Correlation Layers
-        self.Corr_layer = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\FFNN_VAD_Model_ver1_MSE_00048_20230620-222055") # <<<<< Change the model
+        self.Corr_layer = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\FFNN_VAD_Model_ver1_MSE_00048_20230625-231002") # <<<<< Change the model
 
     
     def call(self, inputs):
