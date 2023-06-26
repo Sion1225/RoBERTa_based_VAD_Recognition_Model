@@ -39,7 +39,7 @@ class H_parameter:
         self.num_batch_size = 32 if num_batch_size is None else num_batch_size
 
 # Set Hyper parameters
-model_H_param = H_parameter(num_epochs=15, num_batch_size=16) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
+model_H_param = H_parameter(num_epochs=15, num_batch_size=8) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
 
 # Read and Split data
 df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv", keep_default_na=False)
