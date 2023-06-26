@@ -73,7 +73,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
 
         # Learn Correlation Layers
-        self.Corr_layer = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\FFNN_VAD_Model_ver1_MSE_00048_20230620-222055") # <<<<< Change the model
+        self.Corr_layer_path = "Assinging_VAD_scores_BERT\Model\FFNN_VAD_Model_ver1_MSE_00048_20230625-231002" # <<<<< Change the model
+        self.Corr_layer = tf.keras.models.load_model(self.Corr_layer_path) 
 
     
     def call(self, inputs):
@@ -95,38 +96,36 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         config = super().get_config()
         config.update({
             "model_name": self.model_name,
-            "Corr_layer_config": self.Corr_layer.get_config()
+            "Corr_layer_config": self.Corr_layer_path  # suppose Corr_layer_path is the variable that holds the path to Corr_layer
         })
         return config
 
     @classmethod
     def from_config(cls, config):
-        return cls(**config)
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "model_name": self.model_name,
-            "Corr_layer": self.Corr_layer
-        })
-        return config
-
-    @classmethod
-    def from_config(cls, config):
-        return cls(**config)
+        model = cls(config["model_name"])
+        model.Corr_layer = tf.keras.models.load_model(config["Corr_layer_config"])
+        return model
     
 
 # Load trained model
-custom_objects = {"model_name": TF_RoBERTa_VAD_Classification,
-                  "FFNN_VAD_model": FFNN_VAD_model}
-model = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\VAD_Assinging_RoBERTa_model_ver1.2_20230624-200838", custom_objects=custom_objects)
+custom_objects = {"TF_RoBERTa_VAD_Classification": TF_RoBERTa_VAD_Classification}
+model = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\VAD_Assinging_RoBERTa_model_ver1.2_test_20230626-171344", custom_objects=custom_objects, compile=False)
 
 
 # Test Model
-for i, id, mask in enumerate(X_test):
+for i, (id, mask) in enumerate(zip(X_id_test, X_mask_test)):
     if i >= 10:
         break
-    
-    print(f"Sentence: {tokenizer.decode(id)}")
-    pred = model.predict((id, mask))[0][0]
-    print(f"Predicted Value: {pred}")
+
+    pad_start = np.where(mask == 0)[0]
+    if len(pad_start) > 0:
+        pad_start = pad_start[0]
+    else:
+        pad_start = len(id)
+
+    id_without_pad = id[:pad_start]
+
+    print(f"Sentence: {tokenizer.decode(id_without_pad)}")
+    pred = model.predict((np.array([id]), np.array([mask])))
+    print(f"Predicted Value: {pred[0][0], pred[0][1], pred[0][2]}")
+    print(pred.shape)

@@ -39,7 +39,7 @@ class H_parameter:
         self.num_batch_size = 32 if num_batch_size is None else num_batch_size
 
 # Set Hyper parameters
-model_H_param = H_parameter(num_epochs=4, num_batch_size=32) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
+model_H_param = H_parameter(num_epochs=15, num_batch_size=16) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
 
 # Read and Split data
 df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv", keep_default_na=False)
@@ -73,7 +73,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
 
         # Learn Correlation Layers
-        self.Corr_layer = tf.keras.models.load_model("Assinging_VAD_scores_BERT\Model\FFNN_VAD_Model_ver1_MSE_00048_20230625-231002") # <<<<< Change the model
+        self.Corr_layer_path = "Assinging_VAD_scores_BERT\Model\FFNN_VAD_Model_ver1_MSE_00048_20230625-231002" # <<<<< Change the model
+        self.Corr_layer = tf.keras.models.load_model(self.Corr_layer_path) 
 
     
     def call(self, inputs):
@@ -95,26 +96,29 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         config = super().get_config()
         config.update({
             "model_name": self.model_name,
-            "Corr_layer_config": self.Corr_layer.get_config()
+            "Corr_layer_config": self.Corr_layer_path  # suppose Corr_layer_path is the variable that holds the path to Corr_layer
         })
         return config
 
     @classmethod
     def from_config(cls, config):
-        return cls(**config)
+        model = cls(config["model_name"])
+        model.Corr_layer = tf.keras.models.load_model(config["Corr_layer_config"])
+        return model
     
 
 # Set Callback function
 dir_name = "Assinging_VAD_scores_BERT\Learning_log"
-file_name = "VAD_Assinging_RoBERTa_model_ver1_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+file_name = "VAD_Assinging_RoBERTa_model_ver1.2_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
     return os.path.join(root_logdir, file_name)
 
-# Define Tensorboard callback
+# Define callbacks
 TB_log_dir = make_tensorboard_dir(dir_name)
 TensorB = tf.keras.callbacks.TensorBoard(log_dir=TB_log_dir)
+ES = tf.keras.callbacks.EarlyStopping(monitor="accuracy", mode="max", patience=4, restore_best_weights=True, verbose=1)
 
 # load defined model and compile
 model = TF_RoBERTa_VAD_Classification("roberta-base")
@@ -124,8 +128,26 @@ lr_schedule = Linear_schedule_with_warmup(max_lr=6e-4, num_warmup=round(num_trai
 optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=lr_schedule, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.01) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
 loss = tf.keras.losses.MeanSquaredError()
 model.compile(optimizer=optimizer, loss=loss, metrics = ['accuracy'])
-model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB])
+model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB, ES])
 
 # Save Model
 model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model", file_name)
 model.save(model_path)
+
+# Test Model
+for i, (id, mask) in enumerate(zip(X_id_test, X_mask_test)):
+    if i >= 10:
+        break
+
+    pad_start = np.where(mask == 0)[0]
+    if len(pad_start) > 0:
+        pad_start = pad_start[0]
+    else:
+        pad_start = len(id)
+
+    id_without_pad = id[:pad_start]
+
+    print(f"Sentence: {tokenizer.decode(id_without_pad)}")
+    pred = model.predict((np.array([id]), np.array([mask])))
+    print(f"Predicted Value: {pred[0][0], pred[0][1], pred[0][2]}")
+    print(pred.shape)
