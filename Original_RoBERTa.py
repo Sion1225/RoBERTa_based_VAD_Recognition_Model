@@ -71,11 +71,6 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.predict_V_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1") # Initializer function test
         self.predict_A_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
         self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
-
-        # Learn Correlation Layers
-        self.Corr_layer_path = "Assinging_VAD_scores_BERT\Model\FFNN_VAD_Model_ver1_MSE_00048_20230625-231002" # <<<<< Change the model
-        self.Corr_layer = tf.keras.models.load_model(self.Corr_layer_path) 
-
     
     def call(self, inputs):
         input_ids, attention_mask = inputs
@@ -88,28 +83,25 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.D_1 = self.predict_D_1(cls_token)
 
         VAD_1 = tf.concat([self.V_1, self.A_1, self.D_1], 1) # 0: up-down 1: side
-        final_outputs = self.Corr_layer(VAD_1)
 
-        return final_outputs
+        return VAD_1
 
     def get_config(self):
         config = super().get_config()
         config.update({
             "model_name": self.model_name,
-            "Corr_layer_config": self.Corr_layer_path  # suppose Corr_layer_path is the variable that holds the path to Corr_layer
         })
         return config
 
     @classmethod
     def from_config(cls, config):
         model = cls(config["model_name"])
-        model.Corr_layer = tf.keras.models.load_model(config["Corr_layer_config"])
         return model
     
 
 # Set Callback function
 dir_name = "Assinging_VAD_scores_BERT\Learning_log"
-file_name = "VAD_Assinging_RoBERTa_model_ver1.2_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+file_name = "VAD_Assinging_Original_RoBERTa_model_ver1_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
