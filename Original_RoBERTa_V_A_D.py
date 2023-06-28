@@ -104,7 +104,7 @@ def make_tensorboard_dir(dir_name):
 # Define callbacks
 TB_log_dir = make_tensorboard_dir(dir_name)
 TensorB = tf.keras.callbacks.TensorBoard(log_dir=TB_log_dir)
-ES = tf.keras.callbacks.EarlyStopping(monitor="accuracy", mode="max", patience=4, restore_best_weights=True, verbose=1)
+ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=4, restore_best_weights=True, verbose=1)
 
 # load defined model and compile
 model = TF_RoBERTa_VAD_Classification("roberta-base")
@@ -116,7 +116,7 @@ optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=lr_schedule, be
 
 loss = tf.keras.losses.MeanSquaredError()
 
-model.compile(optimizer=optimizer, loss=loss, metrics = ['accuracy'])
+model.compile(optimizer=optimizer, loss=loss, metrics = ['mse'])
 model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB, ES])
 
 # Save Model
