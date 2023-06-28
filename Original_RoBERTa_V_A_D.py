@@ -110,15 +110,15 @@ def make_tensorboard_dir(dir_name):
 # Define callbacks
 TB_log_dir = make_tensorboard_dir(dir_name)
 TensorB = tf.keras.callbacks.TensorBoard(log_dir=TB_log_dir)
-ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=4, restore_best_weights=True, verbose=1)
+ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=5, restore_best_weights=True, verbose=1)
 
 # load defined model and compile
 model = TF_RoBERTa_VAD_Classification("roberta-base")
 
 num_training = ceil((len(X_train[0])/model_H_param.num_batch_size))
 warmup_ratio = 0.048 # <<< Hyper-parameter; RoBERTa's: 4.8% (0.048)
-lr_schedule = Linear_schedule_with_warmup(max_lr=6e-4, num_warmup=round(num_training*warmup_ratio), num_traning=num_training) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
-optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.0) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
+lr_schedule = Linear_schedule_with_warmup(max_lr=5e-2, num_warmup=round(num_training*warmup_ratio), num_traning=num_training) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
+optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=lr_schedule, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.0) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
 
 loss = tf.keras.losses.MeanSquaredError()
 
@@ -144,7 +144,7 @@ for i, (id, mask) in enumerate(zip(X_id_test, X_mask_test)):
 
     print(f"Sentence: {tokenizer.decode(id_without_pad)}")
     pred = model.predict((np.array([id]), np.array([mask])))
-    print(f"Predicted Value: {pred[0][0]}")
+    print(f"Predicted Value: {pred[0][0], pred[0][1], pred[0][2]}")
     print(pred.shape)
     out_of_range_count = tf.reduce_sum(tf.cast((pred > 5) | (pred < 0), tf.int32))
     print(f"Count of out of range (0<= pred <=5): {out_of_range_count}")
