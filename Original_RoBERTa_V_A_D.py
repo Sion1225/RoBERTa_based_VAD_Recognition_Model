@@ -140,3 +140,5 @@ for i, (id, mask) in enumerate(zip(X_id_test, X_mask_test)):
     pred = model.predict((np.array([id]), np.array([mask])))
     print(f"Predicted Value: {pred[0][0]}")
     print(pred.shape)
+    out_of_range_count = tf.reduce_sum(tf.cast((pred > 5) | (pred < 0), tf.int32))
+    print(f"Count of out of range (0<= pred <=5): {out_of_range_count}")
