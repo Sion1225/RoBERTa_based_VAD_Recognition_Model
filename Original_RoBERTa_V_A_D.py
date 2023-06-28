@@ -76,9 +76,9 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
         cls_token = outputs[1]
 
-        self.ouputs = self.output_layer(cls_token)
+        self.outputs = self.output_layer(cls_token)
 
-        return ouputs
+        return outputs
 
     def get_config(self):
         config = super().get_config()
