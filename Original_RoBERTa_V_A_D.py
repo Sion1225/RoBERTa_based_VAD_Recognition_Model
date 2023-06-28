@@ -44,13 +44,13 @@ model_H_param = H_parameter(num_epochs=15, num_batch_size=16) # <<<<<<<<<<<<<<<<
 # Read and Split data
 df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv", keep_default_na=False)
 #print(df.isnull().sum())
-#VAD = df[["V","A","D"]]
+VAD = df[["V","A","D"]]
 V, A, D = df[["V"]], df[["A"]], df[["D"]]
 texts = df["text"]
 
 # Encode Datas
 input_ids, input_masks = convert_datas_to_features(texts, max_seq_len=model_H_param.max_seq_len, tokenizer=tokenizer)
-y_datas = np.array(V) # <<<<<< V, A, D
+y_datas = np.array(VAD) # <<<<<< V, A, D
 
 # Split Datas for Train and Test
 X_id_train, X_id_test, X_mask_train, X_mask_test, y_train, y_test = train_test_split(input_ids, input_masks, y_datas, test_size=0.1, random_state=1225)
@@ -68,7 +68,9 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.model_name = model_name
         self.roberta = TFRobertaModel.from_pretrained(model_name, from_pt=True)
 
-        self.output_layer = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="Linear_Output") # Initializer function test
+        self.predict_V_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1") # Initializer function test
+        self.predict_A_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
+        self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
     
     def call(self, inputs):
         input_ids, attention_mask = inputs
@@ -76,9 +78,13 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
         cls_token = outputs[1]
 
-        outputs = self.output_layer(cls_token)
+        self.V_1 = self.predict_V_1(cls_token)
+        self.A_1 = self.predict_A_1(cls_token)
+        self.D_1 = self.predict_D_1(cls_token)
 
-        return outputs
+        VAD_1 = tf.concat([self.V_1, self.A_1, self.D_1], 1) # 0: up-down 1: side
+
+        return VAD_1
 
     def get_config(self):
         config = super().get_config()
@@ -94,8 +100,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
     
 
 # Set Callback function
-dir_name = "Assinging_VAD_scores_BERT\Learning_log\V_model"
-file_name = "V_Assinging_Original_RoBERTa_model_ver1.2_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+dir_name = "Assinging_VAD_scores_BERT\Learning_log"
+file_name = "VAD_Assinging_Original_RoBERTa_model_ver1_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
@@ -112,7 +118,7 @@ model = TF_RoBERTa_VAD_Classification("roberta-base")
 num_training = ceil((len(X_train[0])/model_H_param.num_batch_size))
 warmup_ratio = 0.048 # <<< Hyper-parameter; RoBERTa's: 4.8% (0.048)
 lr_schedule = Linear_schedule_with_warmup(max_lr=6e-4, num_warmup=round(num_training*warmup_ratio), num_traning=num_training) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
-optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=lr_schedule, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.01) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
+optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.0) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
 
 loss = tf.keras.losses.MeanSquaredError()
 
@@ -120,7 +126,7 @@ model.compile(optimizer=optimizer, loss=loss, metrics = ['mse'])
 model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB, ES])
 
 # Save Model
-model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model\V_model", file_name)
+model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model", file_name)
 model.save(model_path)
 
 # Test Model
