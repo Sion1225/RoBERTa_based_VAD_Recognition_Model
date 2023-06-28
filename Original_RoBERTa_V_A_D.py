@@ -39,13 +39,13 @@ class H_parameter:
         self.num_batch_size = 32 if num_batch_size is None else num_batch_size
 
 # Set Hyper parameters
-model_H_param = H_parameter(num_epochs=15, num_batch_size=32) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
+model_H_param = H_parameter(num_epochs=15, num_batch_size=16) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
 
 # Read and Split data
 df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv", keep_default_na=False)
 #print(df.isnull().sum())
 #VAD = df[["V","A","D"]]
-V, A, D = df["V"], df["A"], df["D"]
+V, A, D = df[["V"]], df[["A"]], df[["D"]]
 texts = df["text"]
 
 # Encode Datas
@@ -76,7 +76,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
         cls_token = outputs[1]
 
-        self.outputs = self.output_layer(cls_token)
+        outputs = self.output_layer(cls_token)
 
         return outputs
 
@@ -95,7 +95,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
 
 # Set Callback function
 dir_name = "Assinging_VAD_scores_BERT\Learning_log\V_model"
-file_name = "V_Assinging_Original_RoBERTa_model_ver1_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+file_name = "V_Assinging_Original_RoBERTa_model_ver1.2_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
