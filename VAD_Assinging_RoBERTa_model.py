@@ -125,8 +125,8 @@ model = TF_RoBERTa_VAD_Classification("roberta-base")
 
 num_training = ceil((len(X_train[0])/model_H_param.num_batch_size))
 warmup_ratio = 0.048 # <<< Hyper-parameter; RoBERTa's: 4.8% (0.048)
-#lr_schedule = Linear_schedule_with_warmup(max_lr=5e-2, min_lr=0.0, num_warmup=round(num_training*warmup_ratio), num_traning=num_training) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
-optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=3e-5, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.0) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
+lr_schedule = Linear_schedule_with_warmup(max_lr=5e-2, min_lr=0.0, num_warmup=round(num_training*warmup_ratio), num_traning=num_training) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
+optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=lr_schedule, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.0) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
 
 loss = tf.keras.losses.MeanSquaredError()
 

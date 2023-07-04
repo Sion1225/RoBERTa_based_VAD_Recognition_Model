@@ -24,6 +24,7 @@ import os
 from math import ceil
 from datetime import datetime
 
+from kerastuner import BayesianOptimization
 from Encode_datas import convert_datas_to_features
 from RoBERTa_Learning_scheduler import Linear_schedule_with_warmup
 #from FFNN_VAD_model import FFNN_VAD_model
@@ -62,7 +63,7 @@ X_test = (X_id_test, X_mask_test)
 
 # load pre-trained model and define the model for fine-tuning
 class TF_RoBERTa_VAD_Classification(tf.keras.Model):
-    def __init__(self, model_name):
+    def __init__(self, model_name, units: int, kernel_l2_lambda: float, activity_l2_lambda: float, dropout_rate: float):
         super(TF_RoBERTa_VAD_Classification, self).__init__()
 
         self.model_name = model_name
@@ -71,6 +72,21 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.predict_V_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1") # Initializer function test
         self.predict_A_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
         self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
+
+        self.units = units
+        self.kernel_l2_lambda = kernel_l2_lambda
+        self.activity_l2_lambda = activity_l2_lambda
+        self.dropout_rate = dropout_rate
+
+        self.hidden1 = tf.keras.layers.Dense(
+            units=self.units,
+            kernel_regularizer=tf.keras.regularizers.L2(self.kernel_l2_lambda),
+            activity_regularizer=tf.keras.regularizers.L2(self.activity_l2_lambda),
+            activation="gelu",
+            kernel_initializer="he_normal"  # he_normal or he_uniform
+        )
+        self.dropout = tf.keras.layers.Dropout(self.dropout_rate)
+        self.output_layer = tf.keras.layers.Dense(3, activation="linear")
     
     def call(self, inputs):
         input_ids, attention_mask = inputs
@@ -84,7 +100,10 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
 
         VAD_1 = tf.concat([self.V_1, self.A_1, self.D_1], 1) # 0: up-down 1: side
 
-        return VAD_1
+        hidden = self.hidden1(VAD_1)
+        hidden = self.dropout(hidden)
+        ouputs = self.output_layer(hidden)
+        return ouputs
 
     def get_config(self):
         config = super().get_config()
@@ -100,8 +119,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
     
 
 # Set Callback function
-dir_name = "Assinging_VAD_scores_BERT\Learning_log"
-file_name = "VAD_Assinging_Original_RoBERTa_model_ver1_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+dir_name = "Assinging_VAD_scores_BERT\Learning_log\Basic"
+file_name = "VAD_Assinging_Basic_RoBERTa_model_ver1_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
@@ -110,41 +129,66 @@ def make_tensorboard_dir(dir_name):
 # Define callbacks
 TB_log_dir = make_tensorboard_dir(dir_name)
 TensorB = tf.keras.callbacks.TensorBoard(log_dir=TB_log_dir)
-ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=5, restore_best_weights=True, verbose=1)
+ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=4, restore_best_weights=True, verbose=1)
 
-# load defined model and compile
-model = TF_RoBERTa_VAD_Classification("roberta-base")
+# Define the build_model function for Keras Tuner
+def build_model(hp): # Hyper parameter bounds
+    units = hp.Int('units', min_value=560, max_value=1200, step=20)
+    dropout_rate = hp.Float('dropout_rate', min_value=0.0, max_value=0.25, step=0.01)
+    kernel_l2_lambda = hp.Float('kernel_l2_lambda', min_value=0.0, max_value=0.003, step=0.0001)
+    activity_l2_lambda = hp.Float('activity_l2_lambda', min_value=0.0, max_value=0.003, step=0.0001)
 
-num_training = ceil((len(X_train[0])/model_H_param.num_batch_size))
-warmup_ratio = 0.048 # <<< Hyper-parameter; RoBERTa's: 4.8% (0.048)
-#lr_schedule = Linear_schedule_with_warmup(max_lr=5e-2, min_lr=1e-3, num_warmup=round(num_training*warmup_ratio), num_traning=num_training) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
-optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=0.0002, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.0) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
 
-loss = tf.keras.losses.MeanSquaredError()
+    model = TF_RoBERTa_VAD_Classification("roberta-base", units, kernel_l2_lambda, activity_l2_lambda, dropout_rate)
+    
+    optimizer = tf.keras.optimizers.experimental.AdamW(
+        learning_rate=hp.Float('learning_rate', min_value=1e-5, max_value=4e-4, step=1e-5),
+        weight_decay=hp.Float('weight_decay', min_value=0.0, max_value=0.0002, step=0.0001)
+        )
+    
+    loss = tf.keras.losses.MeanSquaredError()
+    model.compile(optimizer=optimizer, loss=loss, metrics = ['mse'])
+    
+    return model
 
-model.compile(optimizer=optimizer, loss=loss, metrics = ['msa'])
-model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB, ES])
+class HyperparametersLogger(tf.keras.callbacks.Callback):
+    def __init__(self, tuner, log_file):
+        super().__init__()
+        self.tuner = tuner
+        self.log_file = log_file
+
+    def on_trial_end(self, trial, logs=None):
+        with open(self.log_file, 'a') as f:
+            f.write(f'Trial {trial.trial_id} ended with hyperparameters: {trial.hyperparameters.values}\n')
+        print(trial.hyperparameters.values)
+
+log_file = 'Assinging_VAD_scores_BERT\Model\Basic\hyperparameters_log.txt'
+
+# Instantiate the tuner
+tuner = BayesianOptimization(
+    build_model,
+    objective='val_mse',
+    max_trials=50,
+    executions_per_trial=2,
+    directory='Assinging_VAD_scores_BERT\Model\Basic\Bayesian',
+    project_name='VAD_Assinging_Basic_RoBERTa_model_1.2') # <<<<<<<<<<<<<<< edit
+
+# Perform the hyperparameter search
+tuner.search(X_train, y_train,
+             validation_data=(X_test, y_test),
+             epochs = 15,
+             batch_size = 16,
+             callbacks=[TensorB, ES, HyperparametersLogger(tuner, log_file)])
+
+# Get the optimal hyperparameters
+best_hps = tuner.get_best_hyperparameters(num_trials = 1)[0]
+
+# Build the model with the optimal hyperparameters
+model = tuner.hypermodel.build(best_hps)
+
+# Train the model
+model.fit(X_train, y_train, validation_data=(X_test, y_test), callbacks=[TensorB, ES])
 
 # Save Model
-model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model", file_name)
+model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model\Basic", file_name)
 model.save(model_path)
-
-# Test Model
-for i, (id, mask) in enumerate(zip(X_id_test, X_mask_test)):
-    if i >= 25:
-        break
-
-    pad_start = np.where(mask == 0)[0]
-    if len(pad_start) > 0:
-        pad_start = pad_start[0]
-    else:
-        pad_start = len(id)
-
-    id_without_pad = id[:pad_start]
-
-    print(f"Sentence: {tokenizer.decode(id_without_pad)}")
-    pred = model.predict((np.array([id]), np.array([mask])))
-    print(f"Predicted Value: {pred[0][0], pred[0][1], pred[0][2]}")
-    print(pred.shape)
-    out_of_range_count = tf.reduce_sum(tf.cast((pred > 5) | (pred < 0), tf.int32))
-    print(f"Count of out of range (0<= pred <=5): {out_of_range_count}")
