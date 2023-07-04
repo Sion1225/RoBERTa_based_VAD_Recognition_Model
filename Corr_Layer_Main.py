@@ -12,7 +12,7 @@ from FFNN_VAD_model import FFNN_VAD_model
 
 # Setting for Tensorboard
 dir_name = "Assinging_VAD_scores_BERT\Learning_log"
-file_name = "FFNN_VAD_Model_ver1_MSE_00048_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+file_name = "FFNN_VAD_Model_ver3_MSE_00048_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
@@ -46,10 +46,10 @@ y_test = X_test
 # ver.6: MSE: 0.0005390459871742311, 'activity_l2_lambda': 0.0008971675445227548, 'batch_size': 30, 'dropout_rate': 0.055347911812369935, 'epochs': 15, 'kernel_l2_lambda': 0.0005002548666769983, 'units': 546
 # ===================================================
 Corr_model = FFNN_VAD_model( # ----- Edit -----
-    units=429,
-    kernel_l2_lambda=0.0002161249853798384,
-    activity_l2_lambda=0.0006709484309491943,
-    dropout_rate=0.014174288321380634
+    units=237,
+    kernel_l2_lambda=0.0009195709533158637,
+    activity_l2_lambda=0.0027801164716184518,
+    dropout_rate=0.263572048877131
 ) #--------------------------------------------
 Corr_model.compile(optimizer="Adam", loss="mse", metrics=["mse"])
 
@@ -58,7 +58,7 @@ TB_log_dir = make_tensorboard_dir(dir_name)
 TensorB = tf.keras.callbacks.TensorBoard(log_dir=TB_log_dir)
 
 # Model train
-Corr_model.fit(X_train, y_train, batch_size = 18, epochs = 12, callbacks=[TensorB]) # <<<<< Edit
+Corr_model.fit(X_train, y_train, batch_size = 12, epochs = 13, callbacks=[TensorB]) # <<<<< Edit
 
 # Save Model
 Corr_model.save(r"Assinging_VAD_scores_BERT\\Model\\" + file_name)
