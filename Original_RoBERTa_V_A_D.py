@@ -36,11 +36,11 @@ tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
 class H_parameter:
     def __init__(self, max_seq_len: int = None, num_epochs: int = None, num_batch_size: int = None):
         self.max_seq_len = 512 if max_seq_len is None else max_seq_len # RoBERTa's sequence length is 512
-        self.num_epochs = 4 if num_epochs is None else num_epochs
+        self.num_epochs = 10 if num_epochs is None else num_epochs
         self.num_batch_size = 32 if num_batch_size is None else num_batch_size
 
 # Set Hyper parameters
-model_H_param = H_parameter(num_epochs=15, num_batch_size=16) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
+model_H_param = H_parameter(num_epochs=20, num_batch_size=16) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
 
 # Read and Split data
 df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv", keep_default_na=False)
@@ -60,6 +60,15 @@ X_id_train, X_id_test, X_mask_train, X_mask_test, y_train, y_test = train_test_s
 X_train = (X_id_train, X_mask_train)
 X_test = (X_id_test, X_mask_test)
 
+# Convert the Numpy data to tf.data.Dataset
+train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
+
+# Shuffle and batch the datasets
+BUFFER_SIZE = len(X_train[0])
+BATCH_SIZE = model_H_param.num_batch_size
+train_dataset = train_dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+test_dataset = test_dataset.batch(BATCH_SIZE)
 
 # load pre-trained model and define the model for fine-tuning
 class TF_RoBERTa_VAD_Classification(tf.keras.Model):
@@ -120,7 +129,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
 
 # Set Callback function
 dir_name = "Assinging_VAD_scores_BERT\Learning_log\Basic"
-file_name = "VAD_Assinging_Basic_RoBERTa_model_ver1_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+file_name = "VAD_Assinging_Basic_RoBERTa_model_ver1.3_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
@@ -133,17 +142,17 @@ ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=4,
 
 # Define the build_model function for Keras Tuner
 def build_model(hp): # Hyper parameter bounds
-    units = hp.Int('units', min_value=560, max_value=1200, step=20)
-    dropout_rate = hp.Float('dropout_rate', min_value=0.0, max_value=0.25, step=0.01)
-    kernel_l2_lambda = hp.Float('kernel_l2_lambda', min_value=0.0, max_value=0.003, step=0.0001)
-    activity_l2_lambda = hp.Float('activity_l2_lambda', min_value=0.0, max_value=0.003, step=0.0001)
+    units = hp.Int('units', min_value=700, max_value=1000, step=10)
+    dropout_rate = hp.Float('dropout_rate', min_value=0.05, max_value=0.3, step=0.01)
+    kernel_l2_lambda = hp.Float('kernel_l2_lambda', min_value=0.0001, max_value=0.0025, step=0.0001)
+    activity_l2_lambda = hp.Float('activity_l2_lambda', min_value=0.0001, max_value=0.0025, step=0.0001)
 
 
     model = TF_RoBERTa_VAD_Classification("roberta-base", units, kernel_l2_lambda, activity_l2_lambda, dropout_rate)
     
     optimizer = tf.keras.optimizers.experimental.AdamW(
-        learning_rate=hp.Float('learning_rate', min_value=1e-5, max_value=4e-4, step=1e-5),
-        weight_decay=hp.Float('weight_decay', min_value=0.0, max_value=0.0002, step=0.0001)
+        learning_rate=hp.Float('learning_rate', min_value=5e-6, max_value=1e-4, step=1e-6),
+        weight_decay=hp.Float('weight_decay', min_value=0.0, max_value=0.001, step=0.0001)
         )
     
     loss = tf.keras.losses.MeanSquaredError()
@@ -171,13 +180,12 @@ tuner = BayesianOptimization(
     max_trials=50,
     executions_per_trial=2,
     directory='Assinging_VAD_scores_BERT\Model\Basic\Bayesian',
-    project_name='VAD_Assinging_Basic_RoBERTa_model_1.2') # <<<<<<<<<<<<<<< edit
+    project_name='VAD_Assinging_Basic_RoBERTa_model_1.3') # <<<<<<<<<<<<<<< edit
 
 # Perform the hyperparameter search
-tuner.search(X_train, y_train,
-             validation_data=(X_test, y_test),
-             epochs = 15,
-             batch_size = 16,
+tuner.search(train_dataset,
+             validation_data=test_dataset,
+             epochs = model_H_param.num_epochs,
              callbacks=[TensorB, ES, HyperparametersLogger(tuner, log_file)])
 
 # Get the optimal hyperparameters
@@ -187,7 +195,7 @@ best_hps = tuner.get_best_hyperparameters(num_trials = 1)[0]
 model = tuner.hypermodel.build(best_hps)
 
 # Train the model
-model.fit(X_train, y_train, validation_data=(X_test, y_test), callbacks=[TensorB, ES])
+model.fit(train_dataset, validation_data=test_dataset, callbacks=[TensorB, ES])
 
 # Save Model
 model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model\Basic", file_name)
