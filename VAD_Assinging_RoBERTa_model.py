@@ -130,7 +130,7 @@ optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=3e-5, beta_1=0.
 
 loss = tf.keras.losses.MeanSquaredError()
 
-model.compile(optimizer=optimizer, loss=loss, metrics = ['msa'])
+model.compile(optimizer=optimizer, loss=loss, metrics = ['mse'])
 model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB, ES])
 
 # Save Model
