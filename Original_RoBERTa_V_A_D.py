@@ -25,6 +25,8 @@ from math import ceil
 from datetime import datetime
 
 from kerastuner import BayesianOptimization
+from sklearn.model_selection import KFold
+
 from Encode_datas import convert_datas_to_features
 from RoBERTa_Learning_scheduler import Linear_schedule_with_warmup
 #from FFNN_VAD_model import FFNN_VAD_model
@@ -53,6 +55,9 @@ texts = df["text"]
 input_ids, input_masks = convert_datas_to_features(texts, max_seq_len=model_H_param.max_seq_len, tokenizer=tokenizer)
 y_datas = np.array(VAD) # <<<<<< V, A, D
 
+
+'''
+#For original
 # Split Datas for Train and Test
 X_id_train, X_id_test, X_mask_train, X_mask_test, y_train, y_test = train_test_split(input_ids, input_masks, y_datas, test_size=0.1, random_state=1225)
 
@@ -69,6 +74,7 @@ BUFFER_SIZE = len(X_train[0])
 BATCH_SIZE = model_H_param.num_batch_size
 train_dataset = train_dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 test_dataset = test_dataset.batch(BATCH_SIZE)
+'''
 
 # load pre-trained model and define the model for fine-tuning
 class TF_RoBERTa_VAD_Classification(tf.keras.Model):
@@ -83,7 +89,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.activity_l2_lambda = activity_l2_lambda
         self.dropout_rate = dropout_rate
 
-        ''' ver.1
+        # ver.1
         self.hidden1 = tf.keras.layers.Dense(
             units=self.units,
             kernel_regularizer=tf.keras.regularizers.L2(self.kernel_l2_lambda),
@@ -118,6 +124,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
             kernel_initializer="he_normal",  # he_normal or he_uniform
             name="Dense_D1"
         )
+        '''
         self.dropout = tf.keras.layers.Dropout(self.dropout_rate)
         self.output_layer = tf.keras.layers.Dense(3, activation="linear")
     
@@ -127,15 +134,16 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
         cls_token = outputs[1]
 
-        ''' ver.1
-        VAD_1 = tf.concat([self.V_1, self.A_1, self.D_1], 1) # 0: up-down 1: side # ver.1
+        # ver.1
+        #VAD_1 = tf.concat([self.V_1, self.A_1, self.D_1], 1) # 0: up-down 1: side # ver.1
 
-        hidden = self.hidden1(VAD_1) #ver.1
+        hidden = self.hidden1(cls_token) #ver.1
 
         hidden = self.dropout(hidden)
         ouputs = self.output_layer(hidden)
-        '''
+        
 
+        '''
         # ver.2
         hidden_V = self.D_V1(cls_token)
         hidden_A = self.D_A1(cls_token)
@@ -147,6 +155,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
 
         hidden = tf.concat([hidden_V, hidden_A, hidden_D], 1)
         ouputs = self.output_layer(hidden)
+        '''
+
         return ouputs
 
     def get_config(self):
@@ -164,7 +174,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
 
 # Set Callback function
 dir_name = "Assinging_VAD_scores_BERT\Learning_log\Basic"
-file_name = "VAD_Assinging_Basic_RoBERTa_model_ver2.compare_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+file_name = "VAD_Assinging_Basic_RoBERTa_model_ver1.compare_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
@@ -220,36 +230,50 @@ best_hps = tuner.get_best_hyperparameters(num_trials = 1)[0]
 model = tuner.hypermodel.build(best_hps)
 '''
 
-a = {'units': 700, 'dropout_rate': 0.16, 'kernel_l2_lambda': 0.0004, 'activity_l2_lambda': 0.0008, 'learning_rate': 5.5e-05, 'weight_decay': 0.0002}
-b = {'units': 750, 'dropout_rate': 0.13, 'kernel_l2_lambda': 0.0004, 'activity_l2_lambda': 0.0002, 'learning_rate': 3.3e-05, 'weight_decay': 0.0003}
-dic = (a, b)
+# Define KFold object
+kf = KFold(n_splits=30, shuffle=True, random_state=1225)
 
+# Define Model's Hyper-parameters
+dic = {'units': 750, 'dropout_rate': 0.13, 'kernel_l2_lambda': 0.0004, 'activity_l2_lambda': 0.0002, 'learning_rate': 3.3e-05, 'weight_decay': 0.0003}
 
-for i in range(len(dic)):
+# Validate model
+for i, (train_index, test_index) in enumerate(kf.split(input_ids, y_datas)):
 
-    with open(dir_name+"\\val_datas.txt","a") as f:
-        f.write("Ver1.3\n")
-        f.write(f"Hyper-parameters: {dic[i]}\n")
+    with open(dir_name+"\\Model_comparison.txt","a") as f:
+        f.write(f"\nEnumerate {i}\n")
 
-    for _ in range(5):
-        model = TF_RoBERTa_VAD_Classification("roberta-base", units=dic[i]["units"], kernel_l2_lambda=dic[i]["kernel_l2_lambda"], activity_l2_lambda=dic[i]["activity_l2_lambda"], dropout_rate=dic[i]["dropout_rate"])
+    # Split input_ids
+    input_ids_train, input_ids_test = input_ids[train_index], input_ids[test_index]
     
-        optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=dic[i]["learning_rate"], weight_decay=dic[i]["weight_decay"])
+    # Split input_masks
+    input_masks_train, input_masks_test = input_masks[train_index], input_masks[test_index]
     
-        loss = tf.keras.losses.MeanSquaredError()
-        model.compile(optimizer=optimizer, loss=loss, metrics = ['mse'])
+    # Combine input_ids and input_masks for training and testing
+    X_train = (input_ids_train, input_masks_train)
+    X_test = (input_ids_test, input_masks_test)
 
-        # Train the model
-        model.fit(train_dataset, validation_data=test_dataset, epochs = model_H_param.num_epochs, callbacks=[TensorB, ES])
+    # Split y_datas
+    y_train, y_test = y_datas[train_index], y_datas[test_index]
 
-        # Test model
-        loss, mse = model.evaluate(test_dataset)
+    # Define Model & Compile
+    model = TF_RoBERTa_VAD_Classification("roberta-base", units=dic["units"], kernel_l2_lambda=dic["kernel_l2_lambda"], activity_l2_lambda=dic["activity_l2_lambda"], dropout_rate=dic["dropout_rate"])
+    
+    optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=dic["learning_rate"], weight_decay=dic["weight_decay"])
+    
+    loss = tf.keras.losses.MeanSquaredError()
+    model.compile(optimizer=optimizer, loss=loss, metrics = ['mse'])
 
-        print(f"mse: {mse}, loss: {loss}")
+    # Train the model
+    model.fit(x=X_train, y=y_train, validation_split=0.075, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size , callbacks=[TensorB, ES])
 
-        # Note log
-        with open(dir_name+"\\val_datas.txt","a") as f:
-            f.write(f"mse: {mse}, loss: {loss}\n")
+    # Test model
+    loss, mse = model.evaluate(x=X_test, y=y_test)
+
+    print(f"mse: {mse}, loss: {loss}")
+
+    # Note log
+    with open(dir_name+"\\Model_comparison.txt","a") as f:
+        f.write(f"mse: {mse}, loss: {loss}\n")
 
 
 
