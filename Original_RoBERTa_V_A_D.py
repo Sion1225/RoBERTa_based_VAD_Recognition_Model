@@ -40,7 +40,7 @@ class H_parameter:
         self.num_batch_size = 32 if num_batch_size is None else num_batch_size
 
 # Set Hyper parameters
-model_H_param = H_parameter(num_epochs=20, num_batch_size=16) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
+model_H_param = H_parameter(num_epochs=25, num_batch_size=16) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
 
 # Read and Split data
 df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv", keep_default_na=False)
@@ -164,7 +164,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
 
 # Set Callback function
 dir_name = "Assinging_VAD_scores_BERT\Learning_log\Basic"
-file_name = "VAD_Assinging_Basic_RoBERTa_model_ver2.1_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+file_name = "VAD_Assinging_Basic_RoBERTa_model_ver2.compare_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
@@ -175,10 +175,11 @@ TB_log_dir = make_tensorboard_dir(dir_name)
 TensorB = tf.keras.callbacks.TensorBoard(log_dir=TB_log_dir)
 ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=4, restore_best_weights=True, verbose=1)
 
+'''
 # Define the build_model function for Keras Tuner
 def build_model(hp): # Hyper parameter bounds
-    units = hp.Int('units', min_value=200, max_value=1000, step=20)
-    dropout_rate = hp.Float('dropout_rate', min_value=0.05, max_value=0.3, step=0.01)
+    units = hp.Int('units', min_value=700, max_value=1200, step=10)
+    dropout_rate = hp.Float('dropout_rate', min_value=0.1, max_value=0.3, step=0.01)
     kernel_l2_lambda = hp.Float('kernel_l2_lambda', min_value=0.0001, max_value=0.0025, step=0.0001)
     activity_l2_lambda = hp.Float('activity_l2_lambda', min_value=0.0001, max_value=0.0025, step=0.0001)
 
@@ -186,8 +187,8 @@ def build_model(hp): # Hyper parameter bounds
     model = TF_RoBERTa_VAD_Classification("roberta-base", units, kernel_l2_lambda, activity_l2_lambda, dropout_rate)
     
     optimizer = tf.keras.optimizers.experimental.AdamW(
-        learning_rate=hp.Float('learning_rate', min_value=5e-6, max_value=1e-4, step=1e-6),
-        weight_decay=hp.Float('weight_decay', min_value=0.0, max_value=0.001, step=0.0001)
+        learning_rate=hp.Float('learning_rate', min_value=1e-6, max_value=7e-5, step=1e-6),
+        weight_decay=hp.Float('weight_decay', min_value=0.0, max_value=0.0005, step=0.0001)
         )
     
     loss = tf.keras.losses.MeanSquaredError()
@@ -201,8 +202,10 @@ tuner = BayesianOptimization(
     objective='val_mse',
     max_trials=50,
     executions_per_trial=2,
-    directory='Assinging_VAD_scores_BERT\Model\Basic\Bayesian',
-    project_name='VAD_Assinging_Basic_RoBERTa_model_2.1') # <<<<<<<<<<<<<<< edit
+    #directory='Assinging_VAD_scores_BERT\Model\Basic\Bayesian',
+    directory="D:\\Experiment Datas\\Assinging_VAD_scores_BERT\\Model\\Basic\\Bayesian",
+    project_name='VAD_Assinging_Basic_RoBERTa_model_1.3') # <<<<<<<<<<<<<<< edit
+
 
 # Perform the hyperparameter search
 tuner.search(train_dataset,
@@ -215,10 +218,43 @@ best_hps = tuner.get_best_hyperparameters(num_trials = 1)[0]
 
 # Build the model with the optimal hyperparameters
 model = tuner.hypermodel.build(best_hps)
+'''
 
-# Train the model
-model.fit(train_dataset, validation_data=test_dataset, callbacks=[TensorB, ES])
+a = {'units': 700, 'dropout_rate': 0.16, 'kernel_l2_lambda': 0.0004, 'activity_l2_lambda': 0.0008, 'learning_rate': 5.5e-05, 'weight_decay': 0.0002}
+b = {'units': 750, 'dropout_rate': 0.13, 'kernel_l2_lambda': 0.0004, 'activity_l2_lambda': 0.0002, 'learning_rate': 3.3e-05, 'weight_decay': 0.0003}
+dic = (a, b)
 
+
+for i in range(len(dic)):
+
+    with open(dir_name+"\\val_datas.txt","a") as f:
+        f.write("Ver1.3\n")
+        f.write(f"Hyper-parameters: {dic[i]}\n")
+
+    for _ in range(5):
+        model = TF_RoBERTa_VAD_Classification("roberta-base", units=dic[i]["units"], kernel_l2_lambda=dic[i]["kernel_l2_lambda"], activity_l2_lambda=dic[i]["activity_l2_lambda"], dropout_rate=dic[i]["dropout_rate"])
+    
+        optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=dic[i]["learning_rate"], weight_decay=dic[i]["weight_decay"])
+    
+        loss = tf.keras.losses.MeanSquaredError()
+        model.compile(optimizer=optimizer, loss=loss, metrics = ['mse'])
+
+        # Train the model
+        model.fit(train_dataset, validation_data=test_dataset, epochs = model_H_param.num_epochs, callbacks=[TensorB, ES])
+
+        # Test model
+        loss, mse = model.evaluate(test_dataset)
+
+        print(f"mse: {mse}, loss: {loss}")
+
+        # Note log
+        with open(dir_name+"\\val_datas.txt","a") as f:
+            f.write(f"mse: {mse}, loss: {loss}\n")
+
+
+
+'''
 # Save Model
 model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model\Basic", file_name)
 model.save(model_path)
+'''
