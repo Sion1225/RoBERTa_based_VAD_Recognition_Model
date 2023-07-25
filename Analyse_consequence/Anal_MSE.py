@@ -3,9 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 
-'''
 # Ver 1.3
-mse_values = (
+mse_values_1 = (
     0.06595173478126526,
     0.07482276856899261,
     0.0639118105173111,
@@ -37,7 +36,7 @@ mse_values = (
     0.07598831504583359,
     0.05550612881779671
 )
-'''
+
 
 # Ver 2.2
 mse_values = (
@@ -73,25 +72,30 @@ mse_values = (
     0.05818257853388786
 )
 
-# Perform Jarque-Bera test
-jb_stats = jarque_bera(mse_values)
-print(f"Jarque-Bera stats\n{jb_stats}")
 
 # Perform Shapiro-Wilk test
 sw_stats = shapiro(mse_values)
 print(f"Shapiro-Wilk stats\n{sw_stats}")
 
+# Perform Jarque-Bera test
+jb_stats = jarque_bera(mse_values)
+print(f"Jarque-Bera stats\n{jb_stats}")
+
+# Perform Skewness & Kurtosis
+skewness = stats.skew(mse_values)
+kurtosis = stats.kurtosis(mse_values)
+print(f"Skewness: {skewness}, Kurtosis: {kurtosis}")
 
 # Plot histogram of the data
-plt.hist(mse_values, bins="auto", color="orange", edgecolor='black')
-plt.title("Histogram of Model_s' MSE values")
+plt.hist(mse_values, bins=8, color="skyblue", edgecolor='black')
+plt.title("Histogram of Model_i's MSE values")
 plt.xlabel('MSE')
 plt.ylabel('Frequency')
 plt.show()
 
 # Plot QQ-plot of the data
 stats.probplot(mse_values, dist="norm", plot=plt)
-plt.title("QQ-plot of Model_s' MSE values")
+plt.title("QQ-plot of Model_i's MSE values")
 plt.show()
 
 
@@ -100,8 +104,12 @@ sample_mean = np.mean(mse_values)
 standard_error = np.std(mse_values, ddof=1) / np.sqrt(len(mse_values))
 
 # Calculate confidence interval
-confidence_level = 0.95
+confidence_level = 0.90
 z_score = stats.norm.ppf((1 + confidence_level) / 2)
 confidence_interval = [sample_mean - z_score * standard_error, sample_mean + z_score * standard_error]
 
 print(f"Confidence Interval:\n{confidence_interval}")
+
+# T-test
+t_stats = stats.ttest_ind(mse_values_1, mse_values)
+print(f"t stats\n{t_stats}")
