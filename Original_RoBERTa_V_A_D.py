@@ -24,6 +24,9 @@ import os
 from math import ceil
 from datetime import datetime
 
+from kerastuner import BayesianOptimization
+from sklearn.model_selection import KFold
+
 from Encode_datas import convert_datas_to_features
 from RoBERTa_Learning_scheduler import Linear_schedule_with_warmup
 #from FFNN_VAD_model import FFNN_VAD_model
@@ -35,11 +38,11 @@ tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
 class H_parameter:
     def __init__(self, max_seq_len: int = None, num_epochs: int = None, num_batch_size: int = None):
         self.max_seq_len = 512 if max_seq_len is None else max_seq_len # RoBERTa's sequence length is 512
-        self.num_epochs = 4 if num_epochs is None else num_epochs
+        self.num_epochs = 10 if num_epochs is None else num_epochs
         self.num_batch_size = 32 if num_batch_size is None else num_batch_size
 
 # Set Hyper parameters
-model_H_param = H_parameter(num_epochs=15, num_batch_size=16) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
+model_H_param = H_parameter(num_epochs=25, num_batch_size=16) # <<<<<<<<<<<<<<<<<<<<<< Set Hyper parameters
 
 # Read and Split data
 df = pd.read_csv("Assinging_VAD_scores_BERT\DataSet\emobank.csv", keep_default_na=False)
@@ -52,6 +55,9 @@ texts = df["text"]
 input_ids, input_masks = convert_datas_to_features(texts, max_seq_len=model_H_param.max_seq_len, tokenizer=tokenizer)
 y_datas = np.array(VAD) # <<<<<< V, A, D
 
+
+'''
+#For original
 # Split Datas for Train and Test
 X_id_train, X_id_test, X_mask_train, X_mask_test, y_train, y_test = train_test_split(input_ids, input_masks, y_datas, test_size=0.1, random_state=1225)
 
@@ -59,18 +65,68 @@ X_id_train, X_id_test, X_mask_train, X_mask_test, y_train, y_test = train_test_s
 X_train = (X_id_train, X_mask_train)
 X_test = (X_id_test, X_mask_test)
 
+# Convert the Numpy data to tf.data.Dataset
+train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
+
+# Shuffle and batch the datasets
+BUFFER_SIZE = len(X_train[0])
+BATCH_SIZE = model_H_param.num_batch_size
+train_dataset = train_dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+test_dataset = test_dataset.batch(BATCH_SIZE)
+'''
 
 # load pre-trained model and define the model for fine-tuning
 class TF_RoBERTa_VAD_Classification(tf.keras.Model):
-    def __init__(self, model_name):
+    def __init__(self, model_name, units: int, kernel_l2_lambda: float, activity_l2_lambda: float, dropout_rate: float):
         super(TF_RoBERTa_VAD_Classification, self).__init__()
 
         self.model_name = model_name
         self.roberta = TFRobertaModel.from_pretrained(model_name, from_pt=True)
+        
+        self.units = units
+        self.kernel_l2_lambda = kernel_l2_lambda
+        self.activity_l2_lambda = activity_l2_lambda
+        self.dropout_rate = dropout_rate
 
-        self.predict_V_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_V_1") # Initializer function test
-        self.predict_A_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_A_1")
-        self.predict_D_1 = tf.keras.layers.Dense(1, kernel_initializer=tf.keras.initializers.TruncatedNormal(0.02), activation="linear", name="predict_D_1")
+        # ver.1
+        self.hidden1 = tf.keras.layers.Dense(
+            units=self.units,
+            kernel_regularizer=tf.keras.regularizers.L2(self.kernel_l2_lambda),
+            activity_regularizer=tf.keras.regularizers.L2(self.activity_l2_lambda),
+            activation="gelu",
+            kernel_initializer="he_normal",  # he_normal or he_uniform
+            name="Shared_layer"
+        )
+        '''
+        # ver.2
+        self.D_V1 = tf.keras.layers.Dense(
+            units=self.units,
+            kernel_regularizer=tf.keras.regularizers.L2(self.kernel_l2_lambda),
+            activity_regularizer=tf.keras.regularizers.L2(self.activity_l2_lambda),
+            activation="gelu",
+            kernel_initializer="he_normal",  # he_normal or he_uniform
+            name="Dense_V1"
+        )
+        self.D_A1 = tf.keras.layers.Dense(
+            units=self.units,
+            kernel_regularizer=tf.keras.regularizers.L2(self.kernel_l2_lambda),
+            activity_regularizer=tf.keras.regularizers.L2(self.activity_l2_lambda),
+            activation="gelu",
+            kernel_initializer="he_normal",  # he_normal or he_uniform
+            name="Dense_A1"
+        )
+        self.D_D1 = tf.keras.layers.Dense(
+            units=self.units,
+            kernel_regularizer=tf.keras.regularizers.L2(self.kernel_l2_lambda),
+            activity_regularizer=tf.keras.regularizers.L2(self.activity_l2_lambda),
+            activation="gelu",
+            kernel_initializer="he_normal",  # he_normal or he_uniform
+            name="Dense_D1"
+        )
+        '''
+        self.dropout = tf.keras.layers.Dropout(self.dropout_rate)
+        self.output_layer = tf.keras.layers.Dense(3, activation="linear")
     
     def call(self, inputs):
         input_ids, attention_mask = inputs
@@ -78,13 +134,30 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
         cls_token = outputs[1]
 
-        self.V_1 = self.predict_V_1(cls_token)
-        self.A_1 = self.predict_A_1(cls_token)
-        self.D_1 = self.predict_D_1(cls_token)
+        # ver.1
+        #VAD_1 = tf.concat([self.V_1, self.A_1, self.D_1], 1) # 0: up-down 1: side # ver.1
 
-        VAD_1 = tf.concat([self.V_1, self.A_1, self.D_1], 1) # 0: up-down 1: side
+        hidden = self.hidden1(cls_token) #ver.1
 
-        return VAD_1
+        hidden = self.dropout(hidden)
+        ouputs = self.output_layer(hidden)
+        
+
+        '''
+        # ver.2
+        hidden_V = self.D_V1(cls_token)
+        hidden_A = self.D_A1(cls_token)
+        hidden_D = self.D_D1(cls_token)
+
+        hidden_V = self.dropout(hidden_V)
+        hidden_A = self.dropout(hidden_A)
+        hidden_D = self.dropout(hidden_D)
+
+        hidden = tf.concat([hidden_V, hidden_A, hidden_D], 1)
+        ouputs = self.output_layer(hidden)
+        '''
+
+        return ouputs
 
     def get_config(self):
         config = super().get_config()
@@ -100,8 +173,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
     
 
 # Set Callback function
-dir_name = "Assinging_VAD_scores_BERT\Learning_log"
-file_name = "VAD_Assinging_Original_RoBERTa_model_ver1_test_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+dir_name = "Assinging_VAD_scores_BERT\Learning_log\Basic"
+file_name = "VAD_Assinging_Basic_RoBERTa_model_ver1.compare_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
@@ -110,41 +183,102 @@ def make_tensorboard_dir(dir_name):
 # Define callbacks
 TB_log_dir = make_tensorboard_dir(dir_name)
 TensorB = tf.keras.callbacks.TensorBoard(log_dir=TB_log_dir)
-ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=5, restore_best_weights=True, verbose=1)
+ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=4, restore_best_weights=True, verbose=1)
 
-# load defined model and compile
-model = TF_RoBERTa_VAD_Classification("roberta-base")
+'''
+# Define the build_model function for Keras Tuner
+def build_model(hp): # Hyper parameter bounds
+    units = hp.Int('units', min_value=700, max_value=1200, step=10)
+    dropout_rate = hp.Float('dropout_rate', min_value=0.1, max_value=0.3, step=0.01)
+    kernel_l2_lambda = hp.Float('kernel_l2_lambda', min_value=0.0001, max_value=0.0025, step=0.0001)
+    activity_l2_lambda = hp.Float('activity_l2_lambda', min_value=0.0001, max_value=0.0025, step=0.0001)
 
-num_training = ceil((len(X_train[0])/model_H_param.num_batch_size))
-warmup_ratio = 0.048 # <<< Hyper-parameter; RoBERTa's: 4.8% (0.048)
-#lr_schedule = Linear_schedule_with_warmup(max_lr=5e-2, min_lr=1e-3, num_warmup=round(num_training*warmup_ratio), num_traning=num_training) # RoBERTa's max_lr: 6e-4, num_training: Number of all backpropagation <<<<<< Hyper parameter
-optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=0.0002, beta_1=0.9, beta_2=0.999, epsilon=1e-7, weight_decay=0.0) # In the RoBERTa; beta_2=0.98, epsilon=1e-6, weight_decay=0.01 <<<<<< Hyper parameter
 
-loss = tf.keras.losses.MeanSquaredError()
+    model = TF_RoBERTa_VAD_Classification("roberta-base", units, kernel_l2_lambda, activity_l2_lambda, dropout_rate)
+    
+    optimizer = tf.keras.optimizers.experimental.AdamW(
+        learning_rate=hp.Float('learning_rate', min_value=1e-6, max_value=7e-5, step=1e-6),
+        weight_decay=hp.Float('weight_decay', min_value=0.0, max_value=0.0005, step=0.0001)
+        )
+    
+    loss = tf.keras.losses.MeanSquaredError()
+    model.compile(optimizer=optimizer, loss=loss, metrics = ['mse'])
+    
+    return model
 
-model.compile(optimizer=optimizer, loss=loss, metrics = ['msa'])
-model.fit(X_train, y_train, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size, validation_data=(X_test, y_test), callbacks=[TensorB, ES])
+# Instantiate the tuner
+tuner = BayesianOptimization(
+    build_model,
+    objective='val_mse',
+    max_trials=50,
+    executions_per_trial=2,
+    #directory='Assinging_VAD_scores_BERT\Model\Basic\Bayesian',
+    directory="D:\\Experiment Datas\\Assinging_VAD_scores_BERT\\Model\\Basic\\Bayesian",
+    project_name='VAD_Assinging_Basic_RoBERTa_model_1.3') # <<<<<<<<<<<<<<< edit
 
+
+# Perform the hyperparameter search
+tuner.search(train_dataset,
+             validation_data=test_dataset,
+             epochs = model_H_param.num_epochs,
+             callbacks=[TensorB, ES])
+
+# Get the optimal hyperparameters
+best_hps = tuner.get_best_hyperparameters(num_trials = 1)[0]
+
+# Build the model with the optimal hyperparameters
+model = tuner.hypermodel.build(best_hps)
+'''
+
+# Define KFold object
+kf = KFold(n_splits=30, shuffle=True, random_state=1225)
+
+# Define Model's Hyper-parameters
+dic = {'units': 750, 'dropout_rate': 0.13, 'kernel_l2_lambda': 0.0004, 'activity_l2_lambda': 0.0002, 'learning_rate': 3.3e-05, 'weight_decay': 0.0003}
+
+# Validate model
+for i, (train_index, test_index) in enumerate(kf.split(input_ids, y_datas)):
+
+    with open(dir_name+"\\Model_comparison.txt","a") as f:
+        f.write(f"\nEnumerate {i}\n")
+
+    # Split input_ids
+    input_ids_train, input_ids_test = input_ids[train_index], input_ids[test_index]
+    
+    # Split input_masks
+    input_masks_train, input_masks_test = input_masks[train_index], input_masks[test_index]
+    
+    # Combine input_ids and input_masks for training and testing
+    X_train = (input_ids_train, input_masks_train)
+    X_test = (input_ids_test, input_masks_test)
+
+    # Split y_datas
+    y_train, y_test = y_datas[train_index], y_datas[test_index]
+
+    # Define Model & Compile
+    model = TF_RoBERTa_VAD_Classification("roberta-base", units=dic["units"], kernel_l2_lambda=dic["kernel_l2_lambda"], activity_l2_lambda=dic["activity_l2_lambda"], dropout_rate=dic["dropout_rate"])
+    
+    optimizer = tf.keras.optimizers.experimental.AdamW(learning_rate=dic["learning_rate"], weight_decay=dic["weight_decay"])
+    
+    loss = tf.keras.losses.MeanSquaredError()
+    model.compile(optimizer=optimizer, loss=loss, metrics = ['mse'])
+
+    # Train the model
+    model.fit(x=X_train, y=y_train, validation_split=0.075, epochs=model_H_param.num_epochs, batch_size=model_H_param.num_batch_size , callbacks=[TensorB, ES])
+
+    # Test model
+    loss, mse = model.evaluate(x=X_test, y=y_test)
+
+    print(f"mse: {mse}, loss: {loss}")
+
+    # Note log
+    with open(dir_name+"\\Model_comparison.txt","a") as f:
+        f.write(f"mse: {mse}, loss: {loss}\n")
+
+
+
+'''
 # Save Model
-model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model", file_name)
+model_path = os.path.join(os.curdir, "Assinging_VAD_scores_BERT\Model\Basic", file_name)
 model.save(model_path)
-
-# Test Model
-for i, (id, mask) in enumerate(zip(X_id_test, X_mask_test)):
-    if i >= 25:
-        break
-
-    pad_start = np.where(mask == 0)[0]
-    if len(pad_start) > 0:
-        pad_start = pad_start[0]
-    else:
-        pad_start = len(id)
-
-    id_without_pad = id[:pad_start]
-
-    print(f"Sentence: {tokenizer.decode(id_without_pad)}")
-    pred = model.predict((np.array([id]), np.array([mask])))
-    print(f"Predicted Value: {pred[0][0], pred[0][1], pred[0][2]}")
-    print(pred.shape)
-    out_of_range_count = tf.reduce_sum(tf.cast((pred > 5) | (pred < 0), tf.int32))
-    print(f"Count of out of range (0<= pred <=5): {out_of_range_count}")
+'''
