@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats as stats
 
 # Ver 1.3
-mse_values_1 = (
+mse_values = (
     0.06595173478126526,
     0.07482276856899261,
     0.0639118105173111,
@@ -39,7 +39,7 @@ mse_values_1 = (
 
 
 # Ver 2.2
-mse_values = (
+mse_values_2 = (
     0.06225941702723503, 
     0.0721583440899849, 
     0.0683281198143959, 
@@ -87,15 +87,15 @@ kurtosis = stats.kurtosis(mse_values)
 print(f"Skewness: {skewness}, Kurtosis: {kurtosis}")
 
 # Plot histogram of the data
-plt.hist(mse_values, bins=8, color="skyblue", edgecolor='black')
-plt.title("Histogram of Model_i's MSE values")
+plt.hist(mse_values, bins=8, color="orange", edgecolor='black')
+plt.title("Histogram of Model_s' MSE values")
 plt.xlabel('MSE')
 plt.ylabel('Frequency')
 plt.show()
 
 # Plot QQ-plot of the data
 stats.probplot(mse_values, dist="norm", plot=plt)
-plt.title("QQ-plot of Model_i's MSE values")
+plt.title("Q-Q plot of Model_s' MSE values")
 plt.show()
 
 
