@@ -1,4 +1,4 @@
-# A model based on RoBERTa for assigning VAD scores to sentences.
+# A model based on RoBERTa for recognise VAD to sentences.
 
 ### *Editing...
 I am currently developing this model for my graduation thesis, and I intend to continue this research as part of my future master's program and research.
