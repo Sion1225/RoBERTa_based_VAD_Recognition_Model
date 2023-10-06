@@ -29,6 +29,10 @@ Sven Buechel and Udo Hahn. EmoBank: Studying the impact of annotation perspectiv
 European Chapter of the Association for Computational Linguistics: Volume 2, Short Papers,
 pages 578–585, Valencia, Spain, April 2017. Association for Computational Linguistics.
 
+Sven Buechel and Udo Hahn. Readers vs. writers vs. texts: Coping with different perspectives
+of text understanding in emotion annotation. In Proceedings of the 11th Linguistic Annotation
+Workshop, pages 1–12, Valencia, Spain, April 2017. Association for Computational Linguistics.
+
 Jacob Devlin, Ming-Wei Chang, Kenton Lee,
 and Kristina Toutanova. Bert: Pre-training of
 deep bidirectional transformers for language understanding, 2019.
@@ -41,3 +45,28 @@ approach, 2019.
 
 Diederik P. Kingma and Jimmy Ba. Adam: A
 method for stochastic optimization, 2017.
+
+Dan Hendrycks and Kevin Gimpel. Gaussian error linear units (gelus), 2023.
+
+Sungjoon Park, Jiseon Kim, Seonghyeon Ye, Jaeyeol Jeon, Hee Young Park, and Alice Oh. Dimensional emotion detection from categorical emotion. In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing, pages 4367–4380, Online and Punta Cana,
+Dominican Republic, November 2021. Association for Computational Linguistics.
+
+Tom O’Malley, Elie Bursztein, James Long, Fran¸cois Chollet, Haifeng Jin, Luca Invernizzi, et al.
+Kerastuner. https://github.com/keras-team/keras-tuner, 2019.
+
+Mart´ın Abadi, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen, Craig Citro, Greg S.
+Corrado, Andy Davis, Jeffrey Dean, Matthieu Devin, Sanjay Ghemawat, Ian Goodfellow, Andrew
+Harp, Geoffrey Irving, Michael Isard, Yangqing Jia, Rafal Jozefowicz, Lukasz Kaiser, Manjunath
+Kudlur, Josh Levenberg, Dandelion Man´e, Rajat Monga, Sherry Moore, Derek Murray, Chris
+Olah, Mike Schuster, Jonathon Shlens, Benoit Steiner, Ilya Sutskever, Kunal Talwar, Paul Tucker,
+Vincent Vanhoucke, Vijay Vasudevan, Fernanda Vi´egas, Oriol Vinyals, Pete Warden, Martin
+Wattenberg, Martin Wicke, Yuan Yu, and Xiaoqiang Zheng. TensorFlow: Large-scale machine
+learning on heterogeneous systems, 2015. Software available from tensorflow.org.
+
+Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Clement Delangue, Anthony Moi,
+Pierric Cistac, Tim Rault, R´emi Louf, Morgan Funtowicz, Joe Davison, Sam Shleifer, Patrick
+von Platen, Clara Ma, Yacine Jernite, Julien Plu, Canwen Xu, Teven Le Scao, Sylvain Gugger,
+Mariama Drame, Quentin Lhoest, and Alexander M. Rush. Transformers: State-of-the-art natural
+language processing. In Proceedings of the 2020 Conference on Empirical Methods in Natural
+Language Processing: System Demonstrations, pages 38–45, Online, October 2020. Association
+for Computational Linguistics
