@@ -80,7 +80,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
             activity_regularizer=tf.keras.regularizers.L2(self.activity_l2_lambda),
             activation="gelu",
             kernel_initializer="he_normal",  # he_normal or he_uniform
-            name="Shared_layer"
+            name="Dense_Layer"
         )
 
         '''
@@ -164,8 +164,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
 
 
 # Set Callback function
-dir_name = "Learning_log\Model_I"
-file_name = "Model_I_1_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+dir_name = "Learning_log\Model_S"
+file_name = "Model_S_1_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
@@ -184,7 +184,7 @@ kf = KFold(n_splits=30, shuffle=True, random_state=1225)
 resume_fold = 0
 
 # Define Model's Hyper-parameters
-dic = {'units': 930, 'dropout_rate': 0.1, 'kernel_l2_lambda': 0.0006, 'activity_l2_lambda': 0.0019, 'learning_rate': 3.5e-05, 'weight_decay': 0.0}
+dic = {'units': 750, 'dropout_rate': 0.13, 'kernel_l2_lambda': 0.0004, 'activity_l2_lambda': 0.0002, 'learning_rate': 3.3e-05, 'weight_decay': 0.0003}
 
 # Validate model
 for i, (train_index, test_index) in enumerate(kf.split(input_ids, y_datas)):
@@ -242,5 +242,5 @@ for i, (train_index, test_index) in enumerate(kf.split(input_ids, y_datas)):
 
 
 # Save Model
-model_path = os.path.join(os.curdir, "Model\Model_I", file_name)
+model_path = os.path.join(os.curdir, "Model\Model_S", file_name)
 model.save(model_path)
