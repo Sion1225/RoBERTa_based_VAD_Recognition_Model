@@ -72,7 +72,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         self.activity_l2_lambda = activity_l2_lambda
         self.dropout_rate = dropout_rate
 
-        
+        '''
         # ver.1
         self.hidden1 = tf.keras.layers.Dense(
             units=self.units,
@@ -82,8 +82,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
             kernel_initializer="he_normal",  # he_normal or he_uniform
             name="Dense_Layer"
         )
-
         '''
+
         # ver.2
         self.D_V1 = tf.keras.layers.Dense(
             units=self.units,
@@ -109,7 +109,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
             kernel_initializer="he_normal",  # he_normal or he_uniform
             name="Dense_D1"
         )
-        '''
+        
         
         self.dropout = tf.keras.layers.Dropout(self.dropout_rate)
         self.output_layer = tf.keras.layers.Dense(3, activation="linear")
@@ -121,7 +121,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
         cls_token = outputs[1]
 
-        
+        '''
         # ver.1
         #VAD_1 = tf.concat([self.V_1, self.A_1, self.D_1], 1) # 0: up-down 1: side # ver.1
 
@@ -130,8 +130,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         hidden = self.dropout(hidden)
         
         outputs = self.output_layer(hidden)
-
         '''
+
         # ver.2
         hidden_V = self.D_V1(cls_token)
         hidden_A = self.D_A1(cls_token)
@@ -142,8 +142,7 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
         hidden_D = self.dropout(hidden_D)
 
         hidden = tf.concat([hidden_V, hidden_A, hidden_D], 1) # 0: up-down 1: side # ver.1
-        outputs = self.output_layer(hidden)
-        '''        
+        outputs = self.output_layer(hidden)       
 
         return outputs
 
@@ -164,8 +163,8 @@ class TF_RoBERTa_VAD_Classification(tf.keras.Model):
 
 
 # Set Callback function
-dir_name = "Learning_log\Model_S"
-file_name = "Model_S_1_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
+dir_name = "Learning_log\Model_I"
+file_name = "Model_I_1_" + datetime.now().strftime("%Y%m%d-%H%M%S") # <<<<< Edit
 
 def make_tensorboard_dir(dir_name):
     root_logdir = os.path.join(os.curdir, dir_name)
@@ -181,10 +180,10 @@ ES = tf.keras.callbacks.EarlyStopping(monitor="val_mse", mode="min", patience=4,
 kf = KFold(n_splits=30, shuffle=True, random_state=1225)
 
 # Resume KFold test when bug is occured
-resume_fold = 0
+resume_fold = 24
 
 # Define Model's Hyper-parameters
-dic = {'units': 750, 'dropout_rate': 0.13, 'kernel_l2_lambda': 0.0004, 'activity_l2_lambda': 0.0002, 'learning_rate': 3.3e-05, 'weight_decay': 0.0003}
+dic = {'units': 930, 'dropout_rate': 0.1, 'kernel_l2_lambda': 0.0006, 'activity_l2_lambda': 0.0019, 'learning_rate': 3.5e-05, 'weight_decay': 0.000}
 
 # Validate model
 for i, (train_index, test_index) in enumerate(kf.split(input_ids, y_datas)):
@@ -242,5 +241,5 @@ for i, (train_index, test_index) in enumerate(kf.split(input_ids, y_datas)):
 
 
 # Save Model
-model_path = os.path.join(os.curdir, "Model\Model_S", file_name)
+model_path = os.path.join(os.curdir, "Model\Model_I", file_name)
 model.save(model_path)
