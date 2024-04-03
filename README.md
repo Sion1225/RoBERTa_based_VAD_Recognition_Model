@@ -1,8 +1,8 @@
-# A model based on RoBERTa for recognise VAD to sentences.
+# A model based on RoBERTa for recognise VAD to sentences. (Siwon Seo, IPSJ, 2024)
+
+Traditional emotion recognition was based on simple categorical classification, but to more accurately capture the complexity of human emotions, the use of the VAD model, which analyzes emotions in three dimensions: Valence (emotional value), Arousal (arousal level), and Dominance (dominance), has been proposed. In this study, we propose an efficient structure for a transformer model that recognizes VAD, using the EMOBank dataset and RoBERTa, a pre-trained large-scale language model.
 
 ### *Editing...
-I am currently developing this model for my graduation thesis, and I intend to continue this research as part of my future master's program and research.
-This will be updated after I finish to write paper.
 
 ### DataSet
 Emo Bank [An Analysis of Annotated Corpora for Emotion Classification in Text](https://aclanthology.org/C18-1179) (Bostan & Klinger, COLING 2018)
