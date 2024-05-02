@@ -1,4 +1,4 @@
-#  [IPSJ proceedings] A model based on RoBERTa for recognise VAD to sentences. (Siwon Seo, 2024)
+#  [[IPSJ proceedings] A model based on RoBERTa for recognise VAD to sentences. (Siwon Seo, 2024)](https://www-ipsj-or-jp.translate.goog/event/taikai/86/WEB/data/pdf/7R-03.html?_x_tr_sl=ja&_x_tr_tl=ko&_x_tr_hl=ko&_x_tr_pto=sc)
 
 Traditional emotion recognition was based on simple categorical classification, but to more accurately capture the complexity of human emotions, the use of the VAD model, which analyzes emotions in three dimensions: Valence (emotional value), Arousal (arousal level), and Dominance (dominance), has been proposed. In this study, we propose an efficient structure for a transformer model that recognizes VAD, using the EMOBank dataset and RoBERTa, a pre-trained large-scale language model.
 
